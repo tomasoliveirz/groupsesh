@@ -1,0 +1,94 @@
+/* Estilo para badge de administrador */
+.admin-badge {
+    background-color: #4F46E5;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 1rem;
+    margin-left: 0.5rem;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Estilo para formulário do administrador */
+.admin-form .form-control:disabled {
+    background-color: rgba(79, 70, 229, 0.1);
+    border-color: rgba(79, 70, 229, 0.2);
+    color: #4F46E5;
+    font-weight: 500;
+}
+
+/* Efeito de pulse para notificações */
+@keyframes pulse-highlight {
+    0% { background-color: rgba(79, 70, 229, 0.1); }
+    50% { background-color: rgba(79, 70, 229, 0.2); }
+    100% { background-color: rgba(79, 70, 229, 0.1); }
+}
+
+.admin-highlight {
+    animation: pulse-highlight 2s infinite;
+}
+
+/* Loading states */
+.loading-placeholder {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading-wave 1.5s infinite;
+    height: 1em;
+    border-radius: 4px;
+}
+
+@keyframes loading-wave {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Estilos para o dashboard */
+.fc-day-has-participants {
+    position: relative;
+}
+
+.fc-day-has-participants:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 0;
+    border-color: transparent #198754 transparent transparent;
+}
+
+.participant-count {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: #198754;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    line-height: 22px;
+    text-align: center;
+}
+
+/* Cores de destaque para participantes */
+.highlight-participants.active[data-count="0"] .fc-daygrid-day-frame {
+    background-color: #f8d7da !important;
+}
+
+.highlight-participants.active[data-count="1"] .fc-daygrid-day-frame {
+    background-color: #fff3cd !important;
+}
+
+.highlight-participants.active[data-count="2"] .fc-daygrid-day-frame {
+    background-color: #d1e7dd !important;
+}
+
+.highlight-participants.active[data-count="3"] .fc-daygrid-day-frame,
+.highlight-participants.active[data-count="4"] .fc-daygrid-day-frame,
+.highlight-participants.active[data-count="5+"] .fc-daygrid-day-frame {
+    background-color: #bfe5c7 !important;
+}
