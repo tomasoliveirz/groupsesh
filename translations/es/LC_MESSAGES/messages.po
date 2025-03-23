@@ -1,22 +1,429 @@
-# es translations for GroupSesh.
-# Copyright (C) 2025 GroupSesh
+# Spanish translations for GroupSesh.
+# Copyright (C) 2023 GroupSesh
 # This file is distributed under the same license as the GroupSesh project.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: GroupSesh 1.0\n"
-"Report-Msgid-Bugs-To: info@groupsesh.com\n"
-"POT-Creation-Date: 2025-03-23 18:14+0000\n"
-"PO-Revision-Date: 2025-03-23 18:14+0000\n"
-"Last-Translator: Tomás Oliveira <tomas@groupsesh.com>\n"
-"Language-Team: es\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2023-12-01 10:00+0000\n"
+"PO-Revision-Date: 2023-12-01 10:00+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
 
-msgid "Coordenação de Disponibilidade Simplificada"
-msgstr "Simplified Availability Coordination"
+# Base Template
+msgid "Simplified Availability Coordination"
+msgstr "Coordinación de Disponibilidad Simplificada"
 
-msgid "Início"
-msgstr "Home"
+msgid "Home"
+msgstr "Inicio"
+
+msgid "Create Survey"
+msgstr "Crear Encuesta"
+
+msgid "About"
+msgstr "Acerca de"
+
+msgid "Simplified availability coordination."
+msgstr "Coordinación de disponibilidad simplificada."
+
+msgid "Useful Links"
+msgstr "Enlaces Útiles"
+
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Copied!"
+msgstr "¡Copiado!"
+
+# Create Survey Page
+msgid "Create New Availability Survey"
+msgstr "Crear Nueva Encuesta de Disponibilidad"
+
+msgid "Create a survey to find the best time for your event or meeting"
+msgstr "Crea una encuesta para encontrar el mejor momento para tu evento o reunión"
+
+msgid "Survey Title"
+msgstr "Título de la Encuesta"
+
+msgid "E.g.: Team Meeting - June 2025"
+msgstr "Ej.: Reunión de Equipo - Junio 2025"
+
+msgid "Please enter a title."
+msgstr "Por favor, ingresa un título."
+
+msgid "Description"
+msgstr "Descripción"
+
+msgid "Briefly describe the purpose of this survey..."
+msgstr "Describe brevemente el propósito de esta encuesta..."
+
+msgid "Your Name"
+msgstr "Tu Nombre"
+
+msgid "Organizer name"
+msgstr "Nombre del organizador"
+
+msgid "Please enter your name."
+msgstr "Por favor, ingresa tu nombre."
+
+msgid "Your Email"
+msgstr "Tu Email"
+
+msgid "your@email.com"
+msgstr "tu@email.com"
+
+msgid "Please enter a valid email."
+msgstr "Por favor, ingresa un email válido."
+
+msgid "Survey Created Successfully!"
+msgstr "¡Encuesta Creada con Éxito!"
+
+msgid "Your availability survey has been created. Save the links below:"
+msgstr "Tu encuesta de disponibilidad ha sido creada. Guarda los enlaces a continuación:"
+
+msgid "Participant Link"
+msgstr "Enlace de Participantes"
+
+msgid "Share This"
+msgstr "Compartir"
+
+msgid "Copy"
+msgstr "Copiar"
+
+msgid "Share this link with people you want to respond to the survey."
+msgstr "Comparte este enlace con las personas que quieres que respondan a la encuesta."
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Copy URL"
+msgstr "Copiar URL"
+
+msgid "Dashboard Link"
+msgstr "Enlace al Panel"
+
+msgid "Private"
+msgstr "Privado"
+
+msgid "Use this link to access the dashboard and view responses."
+msgstr "Usa este enlace para acceder al panel y ver las respuestas."
+
+msgid "Keep it private!"
+msgstr "¡Mantenlo privado!"
+
+msgid "Go to Dashboard"
+msgstr "Ir al Panel"
+
+msgid "Create Another Survey"
+msgstr "Crear Otra Encuesta"
+
+msgid "Creating..."
+msgstr "Creando..."
+
+msgid "Unknown error creating survey"
+msgstr "Error desconocido al crear la encuesta"
+
+msgid "Error communicating with server. Please try again."
+msgstr "Error al comunicarse con el servidor. Por favor, inténtalo de nuevo."
+
+msgid "Error:"
+msgstr "Error:"
+
+msgid "Availability Survey"
+msgstr "Encuesta de Disponibilidad"
+
+msgid "Please participate in this availability survey: "
+msgstr "Por favor, participa en esta encuesta de disponibilidad: "
+
+msgid "Link copied to clipboard!"
+msgstr "¡Enlace copiado al portapapeles!"
+
+# Join Survey Page
+msgid "Join Survey"
+msgstr "Unirse a la Encuesta"
+
+msgid "Select Your Availability"
+msgstr "Selecciona Tu Disponibilidad"
+
+msgid "Hello! Please enter your information and select the days you're available on the calendar below."
+msgstr "¡Hola! Por favor, ingresa tu información y selecciona los días en los que estás disponible en el calendario a continuación."
+
+msgid "Name"
+msgstr "Nombre"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Selected days:"
+msgstr "Días seleccionados:"
+
+msgid "Please select at least one day."
+msgstr "Por favor, selecciona al menos un día."
+
+msgid "Submit Availability"
+msgstr "Enviar Disponibilidad"
+
+msgid "Submitting..."
+msgstr "Enviando..."
+
+msgid "Thank you for your response!"
+msgstr "¡Gracias por tu respuesta!"
+
+msgid "Your availability has been recorded successfully."
+msgstr "Tu disponibilidad ha sido registrada con éxito."
+
+msgid "Submit new response"
+msgstr "Enviar nueva respuesta"
+
+# Dashboard Page
+msgid "Dashboard"
+msgstr "Panel de Control"
+
+msgid "Share"
+msgstr "Compartir"
+
+msgid "Export"
+msgstr "Exportar"
+
+msgid "Survey Information"
+msgstr "Información de la Encuesta"
+
+msgid "Created by:"
+msgstr "Creado por:"
+
+msgid "Creation date:"
+msgstr "Fecha de creación:"
+
+msgid "Expiry date:"
+msgstr "Fecha de expiración:"
+
+msgid "Total participants:"
+msgstr "Total de participantes:"
+
+msgid "Calendar"
+msgstr "Calendario"
+
+msgid "Participants"
+msgstr "Participantes"
+
+msgid "Highlight availabilities"
+msgstr "Resaltar disponibilidades"
+
+msgid "Today"
+msgstr "Hoy"
+
+msgid "Search participant by name or email..."
+msgstr "Buscar participante por nombre o email..."
+
+msgid "No participants yet."
+msgstr "Aún no hay participantes."
+
+msgid "Share the survey link to receive responses."
+msgstr "Comparte el enlace de la encuesta para recibir respuestas."
+
+msgid "No participant found with the term"
+msgstr "No se encontró ningún participante con el término"
+
+msgid "day available"
+msgstr "día disponible"
+
+msgid "days available"
+msgstr "días disponibles"
+
+msgid "Participant Details"
+msgstr "Detalles del Participante"
+
+msgid "Available days:"
+msgstr "Días disponibles:"
+
+msgid "No date selected."
+msgstr "No hay fecha seleccionada."
+
+msgid "Close"
+msgstr "Cerrar"
+
+# About Page
+msgid "About"
+msgstr "Acerca de"
+
+msgid "About GroupSesh"
+msgstr "Acerca de GroupSesh"
+
+msgid "A simple solution to a complex problem: coordinating when everyone can meet."
+msgstr "Una solución simple a un problema complejo: coordinar cuándo todos pueden reunirse."
+
+msgid "Our Story"
+msgstr "Nuestra Historia"
+
+msgid "GroupSesh was born out of frustration trying to coordinate meetings with people in different time zones and with busy schedules."
+msgstr "GroupSesh nació de la frustración de intentar coordinar reuniones con personas en diferentes zonas horarias y con agendas ocupadas."
+
+msgid "After losing countless hours on email exchanges and messages trying to find a time that worked for everyone, Tomás Oliveira decided to create a simple and elegant solution to this common problem."
+msgstr "Después de perder incontables horas en intercambios de correos electrónicos y mensajes tratando de encontrar un horario que funcionara para todos, Tomás Oliveira decidió crear una solución simple y elegante para este problema común."
+
+msgid "Launched in 2025, GroupSesh quickly became an essential tool for remote teams, student groups, families, and anyone who needs to coordinate schedules among multiple people."
+msgstr "Lanzado en 2025, GroupSesh rápidamente se convirtió en una herramienta esencial para equipos remotos, grupos de estudiantes, familias y cualquier persona que necesite coordinar horarios entre múltiples personas."
+
+msgid "Our Mission"
+msgstr "Nuestra Misión"
+
+msgid "At GroupSesh, we believe that coordinating availabilities shouldn't be complicated. Our mission is to simplify the group scheduling process, saving time and reducing frustration."
+msgstr "En GroupSesh, creemos que coordinar disponibilidades no debería ser complicado. Nuestra misión es simplificar el proceso de programación grupal, ahorrando tiempo y reduciendo la frustración."
+
+msgid "We built our platform with a focus on:"
+msgstr "Construimos nuestra plataforma con un enfoque en:"
+
+msgid "Simplicity - intuitive interfaces that anyone can use"
+msgstr "Simplicidad - interfaces intuitivas que cualquiera puede usar"
+
+msgid "Accessibility - multilingual support and responsive design"
+msgstr "Accesibilidad - soporte multilingüe y diseño responsivo"
+
+msgid "Privacy - only necessary information is collected"
+msgstr "Privacidad - solo se recopila la información necesaria"
+
+msgid "Efficiency - save time with clear availability views"
+msgstr "Eficiencia - ahorra tiempo con vistas claras de disponibilidad"
+
+msgid "Meet the Creator"
+msgstr "Conoce al Creador"
+
+msgid "Developer & Founder"
+msgstr "Desarrollador y Fundador"
+
+msgid "Hello! I'm Tomás Oliveira, fullstack developer and creator of GroupSesh. My journey in web development began more than a decade ago, focusing on creating solutions that solve real-world everyday problems."
+msgstr "¡Hola! Soy Tomás Oliveira, desarrollador fullstack y creador de GroupSesh. Mi viaje en el desarrollo web comenzó hace más de una década, centrándome en crear soluciones que resuelvan problemas cotidianos del mundo real."
+
+msgid "Specialized in Python, JavaScript, and modern web technologies, I've worked with remote teams on various projects, which made me experience firsthand the difficulties of coordinating schedules between people in different time zones."
+msgstr "Especializado en Python, JavaScript y tecnologías web modernas, he trabajado con equipos remotos en varios proyectos, lo que me hizo experimentar de primera mano las dificultades de coordinar horarios entre personas en diferentes zonas horarias."
+
+msgid "GroupSesh is the result of my passion for simplifying complex processes and making technology more accessible and useful for everyone. When I'm not coding, I enjoy exploring new technologies, contributing to open source projects, and helping beginning developers."
+msgstr "GroupSesh es el resultado de mi pasión por simplificar procesos complejos y hacer que la tecnología sea más accesible y útil para todos. Cuando no estoy programando, disfruto explorando nuevas tecnologías, contribuyendo a proyectos de código abierto y ayudando a desarrolladores principiantes."
+
+msgid "Visit my portfolio"
+msgstr "Visita mi portafolio"
+
+msgid "Features and Technologies"
+msgstr "Características y Tecnologías"
+
+msgid "Multilingual"
+msgstr "Multilingüe"
+
+msgid "Available in 7 languages: Portuguese (PT/BR), English, Spanish, German, French, and Italian."
+msgstr "Disponible en 7 idiomas: Portugués (PT/BR), Inglés, Español, Alemán, Francés e Italiano."
+
+msgid "Dark Mode"
+msgstr "Modo Oscuro"
+
+msgid "Adaptable interface with light and dark themes for better visual experience."
+msgstr "Interfaz adaptable con temas claros y oscuros para una mejor experiencia visual."
+
+msgid "Responsive"
+msgstr "Responsivo"
+
+msgid "Adaptable design that works perfectly on mobile devices and desktops."
+msgstr "Diseño adaptable que funciona perfectamente en dispositivos móviles y escritorios."
+
+msgid "Technologies"
+msgstr "Tecnologías"
+
+msgid "Built with Python (Flask), SQLite, FullCalendar, Bootstrap, and more."
+msgstr "Construido con Python (Flask), SQLite, FullCalendar, Bootstrap y más."
+
+msgid "Contact Us"
+msgstr "Contáctanos"
+
+msgid "Have questions, suggestions, or feedback? Contact us through social media or visit my personal website."
+msgstr "¿Tienes preguntas, sugerencias o comentarios? Contáctanos a través de las redes sociales o visita mi sitio web personal."
+
+# Index Page
+msgid "Coordinate availabilities with ease"
+msgstr "Coordina disponibilidades con facilidad"
+
+msgid "GroupSesh simplifies event planning by gathering all participants' availabilities in one place."
+msgstr "GroupSesh simplifica la planificación de eventos al reunir las disponibilidades de todos los participantes en un solo lugar."
+
+msgid "Learn More"
+msgstr "Más Información"
+
+msgid "Have a survey link?"
+msgstr "¿Tienes un enlace de encuesta?"
+
+msgid "Paste the survey link you received to participate."
+msgstr "Pega el enlace de la encuesta que recibiste para participar."
+
+msgid "Paste survey link here"
+msgstr "Pega el enlace de la encuesta aquí"
+
+msgid "Access"
+msgstr "Acceder"
+
+msgid "How It Works"
+msgstr "Cómo Funciona"
+
+msgid "GroupSesh makes it simple to coordinate times between multiple people."
+msgstr "GroupSesh hace que sea simple coordinar horarios entre múltiples personas."
+
+msgid "Create a Survey"
+msgstr "Crear una Encuesta"
+
+msgid "Fill out a simple form and get a unique link to share with participants."
+msgstr "Completa un formulario simple y obtén un enlace único para compartir con los participantes."
+
+msgid "Share the Link"
+msgstr "Comparte el Enlace"
+
+msgid "Send the link to all participants to indicate their availability on the calendar."
+msgstr "Envía el enlace a todos los participantes para que indiquen su disponibilidad en el calendario."
+
+msgid "View Results"
+msgstr "Ver Resultados"
+
+msgid "Access the dashboard to see all availabilities and choose the best date for everyone."
+msgstr "Accede al panel para ver todas las disponibilidades y elegir la mejor fecha para todos."
+
+msgid "Why choose GroupSesh?"
+msgstr "¿Por qué elegir GroupSesh?"
+
+msgid "Save Time"
+msgstr "Ahorra Tiempo"
+
+msgid "Forget endless message exchanges. Coordinate availabilities in one place."
+msgstr "Olvídate de los interminables intercambios de mensajes. Coordina disponibilidades en un solo lugar."
+
+msgid "Multilingual Support"
+msgstr "Soporte Multilingüe"
+
+msgid "Available in multiple languages to facilitate coordination with global teams."
+msgstr "Disponible en múltiples idiomas para facilitar la coordinación con equipos globales."
+
+msgid "Simple and Secure"
+msgstr "Simple y Seguro"
+
+msgid "No need to create an account. Secure links and intuitive interface."
+msgstr "No es necesario crear una cuenta. Enlaces seguros e interfaz intuitiva."
+
+msgid "Ready to coordinate your next meeting?"
+msgstr "¿Listo para coordinar tu próxima reunión?"
+
+msgid "Create a survey for free and share with your team in seconds."
+msgstr "Crea una encuesta gratis y compártela con tu equipo en segundos."
+
+msgid "Get Started Now"
+msgstr "Comienza Ahora"
+
+# Errors
+msgid "Survey not found or expired"
+msgstr "Encuesta no encontrada o expirada"
+
+msgid "Survey not found"
+msgstr "Encuesta no encontrada"
+
+msgid "Invalid link. Please check and try again."
+msgstr "Enlace inválido. Por favor, verifica e intenta de nuevo."

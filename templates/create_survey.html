@@ -1,93 +1,176 @@
 {% extends "base.html" %}
 
-{% block title %}Criar Survey - Sistema de Agendamento{% endblock %}
+{% block title %}{{ _('Create Survey') }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
+<style>
+    .fc-day-future {
+        cursor: pointer;
+    }
+    .fc-day-selected {
+        background-color: rgba(0, 123, 255, 0.25) !important;
+    }
+    .fc-day-past {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+    }
+    #selected-days-counter {
+        font-weight: bold;
+    }
+    
+    /* Transições para efeitos visuais */
+    #create-survey-form, #survey-result {
+        transition: opacity 0.3s, transform 0.3s;
+    }
+</style>
+{% endblock %}
+
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow-sm">
+    <div class="col-lg-10">
+        <div class="card shadow">
             <div class="card-header bg-primary text-white">
-                <h2 class="mb-0">Criar Nova Pesquisa de Disponibilidade</h2>
+                <h2 class="mb-0">{{ _('Create New Availability Survey') }}</h2>
             </div>
             <div class="card-body">
+                <div class="mb-4 text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-calendar-plus display-4 text-primary"></i>
+                    </div>
+                    <p class="lead">{{ _('Create a survey to find the best time for your event or meeting') }}</p>
+                </div>
+
                 <form id="create-survey-form">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Título da Pesquisa *</label>
-                        <input type="text" class="form-control" id="title" name="title" required 
-                               placeholder="Ex: Reunião de Equipe - Junho 2025">
-                        <div class="invalid-feedback">Por favor, insira um título.</div>
+                    <div class="mb-4">
+                        <label for="title" class="form-label">{{ _('Survey Title') }} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" id="title" name="title" required 
+                               placeholder="{{ _('E.g.: Team Meeting - June 2025') }}">
+                        <div class="invalid-feedback">{{ _('Please enter a title.') }}</div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Descrição</label>
+                    <div class="mb-4">
+                        <label for="description" class="form-label">{{ _('Description') }}</label>
                         <textarea class="form-control" id="description" name="description" rows="3" 
-                                  placeholder="Descreva brevemente o propósito desta pesquisa..."></textarea>
+                                  placeholder="{{ _('Briefly describe the purpose of this survey...') }}"></textarea>
                     </div>
                     
-                    <div class="row">
+                    <div class="row g-4">
                         <div class="col-md-6 mb-3">
-                            <label for="admin_name" class="form-label">Seu Nome *</label>
-                            <input type="text" class="form-control" id="admin_name" name="admin_name" required
-                                   placeholder="Nome do organizador">
-                            <div class="invalid-feedback">Por favor, insira seu nome.</div>
+                            <label for="admin_name" class="form-label">{{ _('Your Name') }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="admin_name" name="admin_name" required
+                                       placeholder="{{ _('Organizer name') }}">
+                            </div>
+                            <div class="invalid-feedback">{{ _('Please enter your name.') }}</div>
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="admin_email" class="form-label">Seu E-mail *</label>
-                            <input type="email" class="form-control" id="admin_email" name="admin_email" required
-                                   placeholder="seu@email.com">
-                            <div class="invalid-feedback">Por favor, insira um e-mail válido.</div>
+                            <label for="admin_email" class="form-label">{{ _('Your Email') }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="admin_email" name="admin_email" required
+                                       placeholder="{{ _('your@email.com') }}">
+                            </div>
+                            <div class="invalid-feedback">{{ _('Please enter a valid email.') }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bloco para seleção de disponibilidade -->
+                    <div class="mb-4">
+                        <label class="form-label">{{ _('Select your availability') }} <span class="text-danger">*</span></label>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill"></i> 
+                            {{ _('Click on the days when you are available on the calendar below.') }}
+                            <div class="mt-1">
+                                <strong>{{ _('Selected days:') }}</strong> <span id="selected-days-counter">0</span>
+                            </div>
+                        </div>
+                        
+                        <div id="calendar" class="mb-3"></div>
+                        <input type="hidden" id="selected-dates" name="selected-dates" required>
+                        <div class="invalid-feedback" id="calendar-feedback">
+                            {{ _('Please select at least one day.') }}
                         </div>
                     </div>
                     
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
-                            Criar Pesquisa
+                            <i class="bi bi-calendar-check me-2"></i>{{ _('Create Survey') }}
                         </button>
                     </div>
                 </form>
                 
-                <!-- Resultado (inicialmente oculto) -->
+                <!-- Result (initially hidden) -->
                 <div id="survey-result" class="mt-4 d-none">
                     <div class="alert alert-success">
-                        <h4>Pesquisa Criada com Sucesso!</h4>
-                        <p>Sua pesquisa de disponibilidade foi criada. Guarde os links abaixo:</p>
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-check-circle-fill display-6"></i>
+                            </div>
+                            <div>
+                                <h4>{{ _('Survey Created Successfully!') }}</h4>
+                                <p>{{ _('Your availability survey has been created. Save the links below:') }}</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="card mb-3">
-                        <div class="card-header">Link para Participantes</div>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>{{ _('Participant Link') }}</span>
+                            <span class="badge bg-primary">{{ _('Share This') }}</span>
+                        </div>
                         <div class="card-body">
                             <div class="input-group mb-2">
                                 <input type="text" class="form-control" id="participant-link" readonly>
-                                <button class="btn btn-outline-secondary" type="button" 
+                                <button class="btn btn-outline-primary" type="button" 
                                         onclick="copyToClipboard('participant-link')">
-                                    Copiar
+                                    <i class="bi bi-clipboard me-1"></i>{{ _('Copy') }}
                                 </button>
                             </div>
-                            <small class="text-muted">Compartilhe este link com as pessoas que você quer que respondam à pesquisa.</small>
+                            <small class="text-muted">{{ _('Share this link with people you want to respond to the survey.') }}</small>
+                            
+                            <div class="mt-3">
+                                <div class="btn-group w-100">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="shareLink('email')">
+                                        <i class="bi bi-envelope-fill me-1"></i>{{ _('Email') }}
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="shareLink('whatsapp')">
+                                        <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="shareLink('copy')">
+                                        <i class="bi bi-link-45deg me-1"></i>{{ _('Copy URL') }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="card">
-                        <div class="card-header">Link do Dashboard (Apenas para Você)</div>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>{{ _('Dashboard Link') }}</span>
+                            <span class="badge bg-danger">{{ _('Private') }}</span>
+                        </div>
                         <div class="card-body">
                             <div class="input-group mb-2">
                                 <input type="text" class="form-control" id="admin-link" readonly>
-                                <button class="btn btn-outline-secondary" type="button" 
+                                <button class="btn btn-outline-primary" type="button" 
                                         onclick="copyToClipboard('admin-link')">
-                                    Copiar
+                                    <i class="bi bi-clipboard me-1"></i>{{ _('Copy') }}
                                 </button>
                             </div>
-                            <small class="text-muted">Use este link para acessar o dashboard e ver as respostas. <strong>Mantenha-o privado!</strong></small>
+                            <small class="text-muted">{{ _('Use this link to access the dashboard and view responses.') }} <strong>{{ _('Keep it private!') }}</strong></small>
                         </div>
                     </div>
                     
                     <div class="d-grid gap-2 mt-4">
                         <a id="go-to-dashboard" href="#" class="btn btn-primary">
-                            Ir para o Dashboard
+                            <i class="bi bi-speedometer2 me-2"></i>{{ _('Go to Dashboard') }}
                         </a>
                         <button class="btn btn-outline-secondary" onclick="resetForm()">
-                            Criar Outra Pesquisa
+                            <i class="bi bi-plus-circle me-2"></i>{{ _('Create Another Survey') }}
                         </button>
                     </div>
                 </div>
@@ -98,116 +181,51 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Módulos de utilitários -->
+<script src="{{ url_for('static', filename='js/common/validation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/date-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/ui-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/api.js') }}"></script>
+
+<!-- Ouvinte para evento de atualização de página -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('create-survey-form');
-        const submitButton = document.getElementById('submit-button');
-        const resultContainer = document.getElementById('survey-result');
-        
-        // Função para validar o formulário
-        function validateForm() {
-            let isValid = true;
-            const requiredFields = form.querySelectorAll('[required]');
-            
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-            
-            // Validação adicional para e-mail
-            const emailField = document.getElementById('admin_email');
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (emailField.value && !emailRegex.test(emailField.value)) {
-                emailField.classList.add('is-invalid');
-                isValid = false;
-            }
-            
-            return isValid;
-        }
-        
-        // Handler de envio do formulário
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            if (!validateForm()) {
-                return;
-            }
-            
-            // Desabilitar botão e mostrar loading
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Criando...';
-            
-            // Preparar dados
-            const formData = {
-                title: document.getElementById('title').value.trim(),
-                description: document.getElementById('description').value.trim(),
-                admin_name: document.getElementById('admin_name').value.trim(),
-                admin_email: document.getElementById('admin_email').value.trim()
-            };
-            
+    document.addEventListener('pageContentUpdated', function() {
+        console.log('Evento pageContentUpdated recebido');
+        if (document.getElementById('calendar') && typeof DateUtils !== 'undefined') {
+            console.log('Inicializando calendário após atualização de página');
             try {
-                // Enviar requisição
-                const response = await fetch('/api/create-survey', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                // Processar resposta
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Preencher links
-                    document.getElementById('participant-link').value = data.participant_url;
-                    document.getElementById('admin-link').value = data.admin_url;
-                    document.getElementById('go-to-dashboard').href = data.admin_url;
-                    
-                    // Mostrar resultado e esconder formulário
-                    form.classList.add('d-none');
-                    resultContainer.classList.remove('d-none');
-                } else {
-                    // Erro na API
-                    const errorData = await response.json();
-                    alert(`Erro ao criar survey: ${errorData.error || 'Erro desconhecido'}`);
+                // Se houver uma instância global já criada, usar a função initializeCalendar
+                if (typeof window.initializeCalendar === 'function') {
+                    window.initializeCalendar();
+                }
+                // Caso contrário, tentar usar o módulo create.js se disponível
+                else if (typeof window.selectedDates === 'undefined' && document.getElementById('create-survey-form')) {
+                    console.log('Forçando carregamento de create.js');
+                    const script = document.createElement('script');
+                    script.src = "{{ url_for('static', filename='js/pages/create.js') }}";
+                    document.body.appendChild(script);
                 }
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao comunicar com o servidor. Por favor, tente novamente.');
-            } finally {
-                // Restaurar botão
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Criar Pesquisa';
+                console.error('Erro durante inicialização do calendário após atualização:', error);
             }
-        });
+        }
     });
     
-    // Função para copiar link para clipboard
-    function copyToClipboard(elementId) {
-        const element = document.getElementById(elementId);
-        element.select();
-        document.execCommand('copy');
-        
-        // Feedback visual
-        const button = element.nextElementSibling;
-        const originalText = button.innerText;
-        button.innerText = 'Copiado!';
-        setTimeout(() => {
-            button.innerText = originalText;
-        }, 2000);
-    }
-    
-    // Função para resetar o formulário
-    function resetForm() {
-        document.getElementById('create-survey-form').reset();
-        document.getElementById('create-survey-form').classList.remove('d-none');
-        document.getElementById('survey-result').classList.add('d-none');
-    }
+    // Variáveis de configuração para internacionalização
+    window.APP_CONFIG = {
+        language: '{{ language_code[:2] }}',
+        messages: {
+            copied: '{{ _("Link copied to clipboard!") }}',
+            emailSubject: '{{ _("Availability Survey") }}',
+            emailBody: '{{ _("Please participate in this availability survey: ") }}',
+            creating: '{{ _("Creating...") }}',
+            createSurvey: '{{ _("Create Survey") }}',
+            errorUnknown: '{{ _("Unknown error creating survey") }}',
+            errorServer: '{{ _("Error communicating with server. Please try again.") }}'
+        }
+    };
 </script>
+
+<!-- Carregar o script principal normalmente para primeira carga -->
+<script src="{{ url_for('static', filename='js/pages/create.js') }}"></script>
 {% endblock %}

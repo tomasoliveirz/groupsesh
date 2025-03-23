@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}GroupSesh{% endblock %} | {% block subtitle %}{{ _('Coordenação de Disponibilidade Simplificada') }}{% endblock %}</title>
+    <title>{% block title %}GroupSesh{% endblock %} | {% block subtitle %}{{ _('Simplified Availability Coordination') }}{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -18,13 +18,14 @@
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
     
-    <!-- CSS personalizado -->
+    <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/themes.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/transitions.css') }}" rel="stylesheet">
     
     {% block extra_css %}{% endblock %}
     
-    <!-- CSRF token para segurança -->
+    <!-- CSRF token for security -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="theme-light" id="page-body">
@@ -32,7 +33,7 @@
     <header>
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index', lang_code=language_code) }}">
                     <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="GroupSesh Logo" height="36" class="me-2">
                     <span>GroupSesh</span>
                 </a>
@@ -44,18 +45,18 @@
                 <div class="collapse navbar-collapse" id="navbarContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('index') }}">{{ _('Início') }}</a>
+                            <a class="nav-link" href="{{ url_for('index', lang_code=language_code) }}">{{ _('Home') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('create_survey_page') }}">{{ _('Criar Sondagem') }}</a>
+                            <a class="nav-link" href="{{ url_for('create_survey_page', lang_code=language_code) }}">{{ _('Create Survey') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('about_page') }}">{{ _('Sobre') }}</a>
+                            <a class="nav-link" href="{{ url_for('about_page', lang_code=language_code) }}">{{ _('About') }}</a>
                         </li>
                     </ul>
                     
                     <div class="d-flex align-items-center">
-                        <!-- Seletor de Idioma -->
+                        <!-- Language Selector -->
                         <div class="dropdown me-3">
                             <button class="btn btn-sm dropdown-toggle language-selector" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-globe2"></i>
@@ -64,7 +65,8 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 {% for code, lang in languages.items() %}
                                 <li>
-                                    <a class="dropdown-item {% if language_code|default('en') == code %}active{% endif %}" href="{{ url_for(request.endpoint, lang_code=code, **request.view_args) }}">
+                                    <a class="dropdown-item {% if language_code|default('en') == code %}active{% endif %}" 
+                                       href="{{ url_for(request.endpoint, lang_code=code, **request.view_args) }}">
                                         <span class="fi fi-{{ lang.flag }}"></span>
                                         {{ lang.native_name }}
                                     </a>
@@ -73,7 +75,7 @@
                             </ul>
                         </div>
                         
-                        <!-- Alternador de Tema -->
+                        <!-- Theme Toggle -->
                         <button id="theme-toggle" class="btn btn-sm me-2">
                             <i class="bi bi-moon-stars theme-icon-dark"></i>
                             <i class="bi bi-sun theme-icon-light"></i>
@@ -85,13 +87,13 @@
     </header>
     
     <main class="container my-4">
-        <!-- Mensagens Flash -->
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -108,21 +110,21 @@
                         <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="GroupSesh Logo" height="28" class="me-2">
                         <h5 class="mb-0">GroupSesh</h5>
                     </div>
-                    <p class="small">{{ _('Coordenação de disponibilidade simplificada.') }}</p>
+                    <p class="small">{{ _('Simplified availability coordination.') }}</p>
                     <p class="small">&copy; 2025 GroupSesh.com</p>
                 </div>
                 
                 <div class="col-md-4 mb-4 mb-md-0">
-                    <h6>{{ _('Links Úteis') }}</h6>
+                    <h6>{{ _('Useful Links') }}</h6>
                     <ul class="list-unstyled">
-                        <li><a href="{{ url_for('index') }}">{{ _('Início') }}</a></li>
-                        <li><a href="{{ url_for('create_survey_page') }}">{{ _('Criar Sondagem') }}</a></li>
-                        <li><a href="{{ url_for('about_page') }}">{{ _('Sobre') }}</a></li>
+                        <li><a href="{{ url_for('index', lang_code=language_code) }}">{{ _('Home') }}</a></li>
+                        <li><a href="{{ url_for('create_survey_page', lang_code=language_code) }}">{{ _('Create Survey') }}</a></li>
+                        <li><a href="{{ url_for('about_page', lang_code=language_code) }}">{{ _('About') }}</a></li>
                     </ul>
                 </div>
                 
                 <div class="col-md-4">
-                    <h6>{{ _('Conecte-se') }}</h6>
+                    <h6>{{ _('Connect') }}</h6>
                     <div class="social-links">
                         <a href="https://github.com/tomasoliveirz" target="_blank" rel="noopener"><i class="bi bi-github"></i></a>
                         <a href="https://linkedin.com/in/tomasoliveirz" target="_blank" rel="noopener"><i class="bi bi-linkedin"></i></a>
@@ -143,12 +145,12 @@
     <!-- Flag Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.11.0/css/flag-icons.min.css"/>
     
-    <!-- JavaScript global -->
+    <!-- Global JavaScript -->
     <script>
-        // Configuração global para incluir CSRF token em todas as requisições AJAX
+        // Global configuration to include CSRF token in all AJAX requests
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         
-        // Configuração para requisições fetch
+        // Configuration for fetch requests
         const fetchConfig = {
             headers: {
                 'Content-Type': 'application/json',
@@ -156,12 +158,12 @@
             }
         };
         
-        // Alternar Tema Claro/Escuro
+        // Toggle Light/Dark Theme
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('theme-toggle');
             const body = document.getElementById('page-body');
             
-            // Verificar tema salvo
+            // Check saved theme
             const savedTheme = localStorage.getItem('gs-theme');
             if (savedTheme) {
                 body.className = savedTheme;
@@ -178,8 +180,55 @@
                     localStorage.setItem('gs-theme', 'theme-light');
                 }
             });
+            
+            // Listen for system preference changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('gs-theme')) {
+                    body.className = e.matches ? 'theme-dark' : 'theme-light';
+                }
+            });
+
+            const pathname = window.location.pathname;
+            if (pathname.includes('/create-survey')) {
+                // Carregar scripts necessários programaticamente
+                const scripts = [
+                    '/static/js/common/validation.js',
+                    '/static/js/common/date-utils.js',
+                    '/static/js/common/ui-utils.js',
+                    '/static/js/common/api.js',
+                    '/static/js/pages/create.js'
+                ];
+                
+                // Carregar cada script em sequência
+                scripts.forEach(scriptPath => {
+                    const script = document.createElement('script');
+                    script.src = scriptPath;
+                    document.body.appendChild(script);
+                });
+                
+                console.log('Scripts da página de criação de survey carregados diretamente.');
+            }
+            
         });
+        
+        // Function to copy text to clipboard
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const button = element.nextElementSibling;
+            const originalText = button.innerText;
+            button.innerText = '{{ _("Copied!") }}';
+            setTimeout(() => {
+                button.innerText = originalText;
+            }, 2000);
+        }
     </script>
+    
+    <!-- Page transition script -->
+    <script src="{{ url_for('static', filename='js/page-transitions.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

@@ -4,6 +4,8 @@
 
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+
 <style>
     .fc-day-future {
         cursor: pointer;
@@ -35,6 +37,7 @@
                 </div>
                 {% endif %}
                 
+
                 <div id="participation-form">
                     <h4 class="mb-3">Indique sua disponibilidade</h4>
                     <p class="text-muted">
@@ -98,6 +101,36 @@
                             </a>
                         </div>
                     </div>
+                </div>
+                <!-- Admin Authentication Modal -->
+                <div class="modal fade" id="admin-auth-modal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ _('Verificação de Administrador') }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>{{ _('Para confirmar que você é o administrador desta survey, por favor insira seu email:') }}</p>
+                                <div class="mb-3">
+                                    <label for="admin-email" class="form-label">{{ _('Email do Administrador') }}</label>
+                                    <input type="email" class="form-control" id="admin-email">
+                                    <div class="invalid-feedback">
+                                        {{ _('Email inválido ou não corresponde ao administrador.') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancelar') }}</button>
+                                <button type="button" class="btn btn-primary" id="verify-admin-btn">{{ _('Verificar') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Link para identificação do admin -->
+                <div class="text-center mt-3">
+                    <a href="#" id="admin-identify-link">{{ _('Sou o administrador desta survey') }}</a>
                 </div>
             </div>
         </div>

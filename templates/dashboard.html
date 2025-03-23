@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - {{ survey.title }}{% endblock %}
+{% block title %}{{ _('Dashboard') }} - {{ survey.title }}{% endblock %}
 
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+
 <style>
     .participant-card {
         cursor: pointer;
@@ -56,16 +58,29 @@
     .highlight-participants[data-count="5+"] .fc-daygrid-day-frame {
         background-color: #bfe5c7 !important;
     }
+    .admin-badge {
+        background-color: #4F46E5;
+        color: white;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 1rem;
+        margin-left: 0.5rem;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .admin-participant {
+        border-left: 3px solid #4F46E5;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Mensagem de Survey Expirada -->
+<!-- Survey Expired Message -->
 {% if is_expired %}
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    <strong>Atenção:</strong> Esta survey está expirada. Os participantes não podem mais responder, mas você ainda pode visualizar os resultados.
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    <strong>{{ _('Attention:') }}</strong> {{ _('This survey has expired. Participants can no longer respond, but you can still view the results.') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
 
@@ -77,19 +92,37 @@
                 
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-light btn-sm" id="share-btn">
-                        <i class="bi bi-share-fill"></i> Compartilhar
+                        <i class="bi bi-share-fill"></i> {{ _('Share') }}
                     </button>
                     <button type="button" class="btn btn-light btn-sm" id="export-btn">
-                        <i class="bi bi-download"></i> Exportar
+                        <i class="bi bi-download"></i> {{ _('Export') }}
                     </button>
                 </div>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-4">
+                        <!-- Survey Actions Card -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{{ _('Survey Actions') }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-secondary" id="share-survey-btn">
+                                        <i class="bi bi-share-fill me-2"></i>{{ _('Share Survey') }}
+                                    </button>
+                                    <button class="btn btn-outline-info" id="export-results-btn">
+                                        <i class="bi bi-download me-2"></i>{{ _('Export Results') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Survey Information Card -->
                         <div class="card h-100">
                             <div class="card-header">
-                                <h5 class="mb-0">Informações da Survey</h5>
+                                <h5 class="mb-0">{{ _('Survey Information') }}</h5>
                             </div>
                             <div class="card-body">
                                 {% if survey.description %}
@@ -99,27 +132,27 @@
                                 
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Criado por:</span>
+                                        <span>{{ _('Created by:') }}</span>
                                         <strong>{{ survey.admin_name }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Data de criação:</span>
-                                        <strong id="creation-date"></strong>
+                                        <span>{{ _('Creation date:') }}</span>
+                                        <strong id="creation-date">{{ survey.created_at|date_format }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Data de expiração:</span>
-                                        <strong id="expiry-date"></strong>
+                                        <span>{{ _('Expiry date:') }}</span>
+                                        <strong id="expiry-date">{{ survey.expires_at|date_format }}</strong>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>Total de participantes:</span>
-                                        <strong id="participants-count">Carregando...</strong>
+                                        <span>{{ _('Total participants:') }}</span>
+                                        <strong id="participants-count">{{ _('Calculating...') }}</strong>
                                     </li>
                                 </ul>
                                 
                                 <div class="mt-3">
                                     <div class="input-group mb-2">
-                                        <span class="input-group-text">Link de Participantes</span>
-                                        <input type="text" class="form-control" id="survey-link" readonly value="{{ url_for('join_survey_page', token=survey.token, _external=True) }}">
+                                        <span class="input-group-text">{{ _('Participant Link') }}</span>
+                                        <input type="text" class="form-control" id="survey-link" readonly value="{{ url_for('join_survey_page', token=survey.token, lang_code=language_code, _external=True) }}">
                                         <button class="btn btn-outline-secondary" type="button" 
                                                 onclick="copyToClipboard('survey-link')">
                                             <i class="bi bi-clipboard"></i>
@@ -138,14 +171,14 @@
                                         <button class="nav-link active" id="calendar-tab" data-bs-toggle="tab" 
                                                 data-bs-target="#calendar-tab-pane" type="button" role="tab" 
                                                 aria-controls="calendar-tab-pane" aria-selected="true">
-                                            Calendário
+                                            {{ _('Calendar') }}
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link" id="participants-tab" data-bs-toggle="tab" 
                                                 data-bs-target="#participants-tab-pane" type="button" role="tab" 
                                                 aria-controls="participants-tab-pane" aria-selected="false">
-                                            Participantes
+                                            {{ _('Participants') }}
                                         </button>
                                     </li>
                                 </ul>
@@ -159,7 +192,7 @@
                                             <div class="form-check form-switch">
                                                 <input class="form-check-input" type="checkbox" id="highlight-switch">
                                                 <label class="form-check-label" for="highlight-switch">
-                                                    Destacar disponibilidades
+                                                    {{ _('Highlight availabilities') }}
                                                 </label>
                                             </div>
                                             
@@ -168,7 +201,7 @@
                                                     <i class="bi bi-chevron-left"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="today-btn">
-                                                    Hoje
+                                                    {{ _('Today') }}
                                                 </button>
                                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="next-month-btn">
                                                     <i class="bi bi-chevron-right"></i>
@@ -184,15 +217,15 @@
                                         
                                         <div class="mb-3">
                                             <input type="text" class="form-control" id="participant-search" 
-                                                   placeholder="Buscar participante por nome ou e-mail...">
+                                                   placeholder="{{ _('Search participant by name or email...') }}">
                                         </div>
                                         
                                         <div id="participants-list">
                                             <div class="text-center my-5">
                                                 <div class="spinner-border text-primary" role="status">
-                                                    <span class="visually-hidden">Carregando...</span>
+                                                    <span class="visually-hidden">{{ _('Loading...') }}</span>
                                                 </div>
-                                                <p class="mt-2">Carregando participantes...</p>
+                                                <p class="mt-2">{{ _('Loading participants...') }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -204,48 +237,48 @@
             </div>
         </div>
         
-        <!-- Modal de Participantes -->
+        <!-- Participants Modal -->
         <div class="modal fade" id="participants-modal" tabindex="-1" aria-labelledby="participants-modal-label" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="participants-modal-label">Participantes para o dia <span id="modal-date"></span></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        <h5 class="modal-title" id="participants-modal-label">{{ _('Participants for day') }} <span id="modal-date"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div id="modal-participants-list" class="list-group list-group-flush">
-                            <!-- Será preenchido via JavaScript -->
+                            <!-- Will be filled via JavaScript -->
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Modal de Detalhe do Participante -->
+        <!-- Participant Detail Modal -->
         <div class="modal fade" id="participant-detail-modal" tabindex="-1" aria-labelledby="participant-detail-modal-label" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="participant-detail-modal-label">Detalhes do Participante</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        <h5 class="modal-title" id="participant-detail-modal-label">{{ _('Participant Details') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div id="participant-info">
-                            <!-- Será preenchido via JavaScript -->
+                            <!-- Will be filled via JavaScript -->
                         </div>
                         
                         <div class="mt-3">
-                            <h6>Dias disponíveis:</h6>
+                            <h6>{{ _('Available days:') }}</h6>
                             <div id="participant-dates" class="list-group list-group-flush">
-                                <!-- Será preenchido via JavaScript -->
+                                <!-- Will be filled via JavaScript -->
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Close') }}</button>
                     </div>
                 </div>
             </div>
@@ -255,10 +288,69 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Módulos de utilitários -->
+<script src="{{ url_for('static', filename='js/common/validation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/date-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/ui-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/api.js') }}"></script>
+
+<!-- Bibliotecas externas -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<!-- Módulo principal do dashboard -->
+<script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
+
+<!-- Variáveis de configuração para a página -->
 <script>
+    // Dados iniciais para bootstrapping do dashboard
+    window.DASHBOARD_CONFIG = {
+        survey: {
+            id: {{ survey.id }},
+            token: "{{ survey.token }}",
+            title: "{{ survey.title }}",
+            admin_email: "{{ survey.admin_email }}",
+            admin_name: "{{ survey.admin_name }}",
+            created_at: "{{ survey.created_at }}",
+            expires_at: "{{ survey.expires_at }}"
+        },
+        language: "{{ language_code }}",
+        paths: {
+            survey_info: "/api/survey-info/{{ survey.token }}",
+            survey_data: "/api/survey-data/{{ survey.token }}"
+        }
+    };
+    
+    // Ouvinte para garantir inicialização após transições AJAX
+    document.addEventListener('pageContentUpdated', function() {
+        if (typeof window.initDashboard === 'function') {
+            window.initDashboard();
+        }
+    });
+    
+    // Função auxiliar para cópia de texto para clipboard
+    // Mantida para compatibilidade com a chamada onclick
+    function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        element.select();
+        document.execCommand('copy');
+        
+        // Visual feedback
+        const button = element.nextElementSibling;
+        if (button) {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i>';
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 2000);
+        }
+    }
+
+    // Lógica do calendário e interface
     document.addEventListener('DOMContentLoaded', function() {
-        // Elementos do DOM
+        // DOM Elements
         const calendarEl = document.getElementById('calendar');
         const participantsList = document.getElementById('participants-list');
         const participantsCount = document.getElementById('participants-count');
@@ -270,39 +362,39 @@
         const participantDetailModal = new bootstrap.Modal(document.getElementById('participant-detail-modal'));
         const participantSearch = document.getElementById('participant-search');
         const highlightSwitch = document.getElementById('highlight-switch');
+        const shareSurveyBtn = document.getElementById('share-survey-btn');
+        const exportResultsBtn = document.getElementById('export-results-btn');
         
-        // Variáveis globais
+        // Global variables
         let surveyData = null;
         let calendar = null;
         
-        // Função para formatar data
+        // Get current locale from HTML lang attribute
+        const currentLocale = document.documentElement.lang || 'en';
+        const formatOptions = {
+            date: {
+                short: { day: '2-digit', month: '2-digit', year: 'numeric' },
+                full: { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+            }
+        };
+        
+        // Date formatting functions
         function formatDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            return date.toLocaleDateString(currentLocale, formatOptions.date.full);
         }
         
-        // Função para formatar data curta (sem hora)
         function formatShortDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            return date.toLocaleDateString(currentLocale, formatOptions.date.short);
         }
         
-        // Inicializar calendário
+        // Initialize calendar
         function initCalendar(data) {
-            // Mapear datas para eventos do calendário
+            // Map dates to calendar events
             const events = [];
             
-            // Para cada data com participantes
+            // For each date with participants
             for (const dateStr in data.availability_by_date) {
                 const participants = data.availability_by_date[dateStr];
                 events.push({
@@ -317,7 +409,7 @@
                 });
             }
             
-            // Inicializar calendário
+            // Initialize calendar
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 headerToolbar: {
@@ -327,34 +419,34 @@
                 },
                 views: {
                     dayGridMonth: {
-                        buttonText: 'Mês'
+                        buttonText: currentLocale === 'en' ? 'Month' : 'Mês'
                     },
                     dayGridYear: {
-                        buttonText: 'Ano',
+                        buttonText: currentLocale === 'en' ? 'Year' : 'Ano',
                         duration: { years: 1 }
                     }
                 },
-                locale: 'pt-br',
+                locale: currentLocale.substring(0, 2), // FullCalendar uses 2-letter locale codes
                 height: 'auto',
                 events: events,
                 eventDidMount: function(info) {
                     if (info.event.extendedProps.count) {
                         const count = info.event.extendedProps.count;
                         
-                        // Adicionar classe para estilização
+                        // Add class for styling
                         info.el.closest('.fc-daygrid-day').classList.add('fc-day-has-participants');
                         
-                        // Adicionar contador de participantes
+                        // Add participant counter
                         const countEl = document.createElement('div');
                         countEl.className = 'participant-count';
                         countEl.textContent = count;
                         info.el.closest('.fc-daygrid-day-frame').appendChild(countEl);
                         
-                        // Adicionar atributo para destaque condicional
+                        // Add attribute for conditional highlighting
                         const dayEl = info.el.closest('.fc-daygrid-day');
                         dayEl.classList.add('highlight-participants');
                         
-                        // Categorizar por número de participantes
+                        // Categorize by number of participants
                         let category = count >= 5 ? '5+' : count.toString();
                         dayEl.setAttribute('data-count', category);
                     }
@@ -371,7 +463,7 @@
             
             calendar.render();
             
-            // Botões de navegação
+            // Navigation buttons
             document.getElementById('prev-month-btn').addEventListener('click', function() {
                 calendar.prev();
             });
@@ -385,33 +477,47 @@
             });
         }
         
-        // Função para mostrar modal de participantes por data
+        // Show participants modal for a date
         function showParticipantsModal(dateStr, participants) {
-            // Formatar data para o título do modal
+            // Format date for modal title
             modalDate.textContent = formatShortDate(dateStr);
             
-            // Limpar lista anterior
+            // Clear previous list
             modalParticipantsList.innerHTML = '';
             
-            // Preencher com participantes
+            // Fill with participants
             if (participants.length === 0) {
-                modalParticipantsList.innerHTML = '<div class="text-center py-3">Nenhum participante disponível neste dia.</div>';
+                modalParticipantsList.innerHTML = `<div class="text-center py-3">${currentLocale === 'en' ? 'No participants available on this day.' : 'Nenhum participante disponível neste dia.'}</div>`;
             } else {
                 participants.forEach(participant => {
                     const participantId = participant.participant_id;
                     const fullParticipant = surveyData.participants[participantId];
                     
+                    if (!fullParticipant) {
+                        console.warn(`Participant ${participantId} not found in full data`);
+                        return;
+                    }
+                    
                     const item = document.createElement('a');
                     item.href = '#';
                     item.className = 'list-group-item list-group-item-action';
+                    
+                    // Check if this participant is the admin
+                    const isAdmin = fullParticipant.is_admin;
+                    if (isAdmin) {
+                        item.classList.add('admin-participant');
+                    }
+                    
+                    const adminBadge = isAdmin ? `<span class="admin-badge">${currentLocale === 'en' ? 'Admin' : 'Admin'}</span>` : '';
+                    
                     item.innerHTML = `
                         <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">${participant.name}</h6>
+                            <h6 class="mb-1">${participant.name} ${adminBadge}</h6>
                         </div>
                         <p class="mb-1">${participant.email}</p>
                     `;
                     
-                    // Evento para mostrar detalhes do participante
+                    // Event to show participant details
                     item.addEventListener('click', function(e) {
                         e.preventDefault();
                         showParticipantDetails(fullParticipant);
@@ -421,37 +527,42 @@
                 });
             }
             
-            // Mostrar modal
+            // Show modal
             participantsModal.show();
         }
         
-        // Função para mostrar detalhes de um participante
+        // Show details of a participant
         function showParticipantDetails(participant) {
-            // Fechar modal anterior
+            // Close previous modal
             participantsModal.hide();
             
-            // Preencher informações
+            // Fill information
             const participantInfo = document.getElementById('participant-info');
+            
+            // Check if this participant is the admin
+            const isAdmin = participant.is_admin;
+            const adminBadge = isAdmin ? `<span class="admin-badge">${currentLocale === 'en' ? 'Admin' : 'Admin'}</span>` : '';
+            
             participantInfo.innerHTML = `
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">${participant.name}</h5>
+                        <h5 class="card-title">${participant.name} ${adminBadge}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">${participant.email}</h6>
                         <p class="card-text">
-                            <small class="text-muted">Resposta enviada em: ${formatDate(participant.created_at)}</small>
+                            <small class="text-muted">${currentLocale === 'en' ? 'Response submitted on' : 'Resposta enviada em'}: ${formatDate(participant.created_at)}</small>
                         </p>
                     </div>
                 </div>
             `;
             
-            // Preencher datas disponíveis
+            // Fill available dates
             const datesList = document.getElementById('participant-dates');
             datesList.innerHTML = '';
             
-            if (participant.availability_dates.length === 0) {
-                datesList.innerHTML = '<div class="text-center py-3">Nenhuma data selecionada.</div>';
+            if (!Array.isArray(participant.availability_dates) || participant.availability_dates.length === 0) {
+                datesList.innerHTML = `<div class="text-center py-3">${currentLocale === 'en' ? 'No date selected.' : 'Nenhuma data selecionada.'}</div>`;
             } else {
-                // Ordenar datas
+                // Sort dates
                 const sortedDates = [...participant.availability_dates].sort();
                 
                 sortedDates.forEach(dateStr => {
@@ -462,13 +573,23 @@
                 });
             }
             
-            // Mostrar modal
+            // Show modal
             participantDetailModal.show();
         }
         
-        // Função para atualizar lista de participantes
+        // Update participants list
         function updateParticipantsList(participants, filter = '') {
+            if (!participantsList) return;
+            
             participantsList.innerHTML = '';
+            
+            if (!participants || typeof participants !== 'object') {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger';
+                errorDiv.textContent = currentLocale === 'en' ? 'Invalid participant data' : 'Dados de participantes inválidos';
+                participantsList.appendChild(errorDiv);
+                return;
+            }
             
             const participantIds = Object.keys(participants);
             
@@ -478,19 +599,21 @@
                         <div class="display-4 text-muted mb-3">
                             <i class="bi bi-people"></i>
                         </div>
-                        <p class="lead">Nenhum participante ainda.</p>
-                        <p class="text-muted">Compartilhe o link da survey para receber respostas.</p>
+                        <p class="lead">${currentLocale === 'en' ? 'No participants yet.' : 'Nenhum participante ainda.'}</p>
+                        <p class="text-muted">${currentLocale === 'en' ? 'Share the survey link to receive responses.' : 'Compartilhe o link da survey para receber respostas.'}</p>
                     </div>
                 `;
                 return;
             }
             
-            // Filtrar participantes
+            // Filter participants
             let filteredIds = participantIds;
             if (filter) {
                 const lowerFilter = filter.toLowerCase();
                 filteredIds = participantIds.filter(id => {
                     const p = participants[id];
+                    if (!p || !p.name || !p.email) return false;
+                    
                     return p.name.toLowerCase().includes(lowerFilter) || 
                            p.email.toLowerCase().includes(lowerFilter);
                 });
@@ -499,39 +622,56 @@
             if (filteredIds.length === 0) {
                 participantsList.innerHTML = `
                     <div class="text-center py-3">
-                        <p>Nenhum participante encontrado com o termo "${filter}".</p>
+                        <p>${currentLocale === 'en' ? 'No participant found with the term' : 'Nenhum participante encontrado com o termo'} "${filter}".</p>
                     </div>
                 `;
                 return;
             }
             
-            // Ordenar por nome
+            // Sort by: 1) Admin first, 2) Name alphabetically
             filteredIds.sort((a, b) => {
-                return participants[a].name.localeCompare(participants[b].name);
+                const pA = participants[a] || {};
+                const pB = participants[b] || {};
+                
+                // Admin always first
+                if (pA.is_admin && !pB.is_admin) return -1;
+                if (!pA.is_admin && pB.is_admin) return 1;
+                
+                // Then by name
+                return (pA.name || '').localeCompare(pB.name || '');
             });
             
-            // Criar lista
+            // Create list
             const list = document.createElement('div');
             list.className = 'list-group';
             
             filteredIds.forEach(id => {
                 const participant = participants[id];
+                if (!participant) return;
+                
+                // Check if this participant is the admin
+                const isAdmin = !!participant.is_admin;
+                const adminBadge = isAdmin ? `<span class="admin-badge">${currentLocale === 'en' ? 'Admin' : 'Admin'}</span>` : '';
                 
                 const item = document.createElement('a');
                 item.href = '#';
                 item.className = 'list-group-item list-group-item-action participant-card';
+                if (isAdmin) item.classList.add('admin-participant');
+                
                 item.innerHTML = `
                     <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">${participant.name}</h6>
-                        <small>${formatShortDate(participant.created_at)}</small>
+                        <h6 class="mb-1">${participant.name || 'N/A'} ${adminBadge}</h6>
+                        <small>${formatShortDate(participant.created_at || new Date())}</small>
                     </div>
-                    <p class="mb-1">${participant.email}</p>
+                    <p class="mb-1">${participant.email || 'N/A'}</p>
                     <small class="text-muted">
-                        ${participant.availability_dates.length} ${participant.availability_dates.length === 1 ? 'dia disponível' : 'dias disponíveis'}
+                        ${(participant.availability_dates || []).length} ${(participant.availability_dates || []).length === 1 ? 
+                            (currentLocale === 'en' ? 'day available' : 'dia disponível') : 
+                            (currentLocale === 'en' ? 'days available' : 'dias disponíveis')}
                     </small>
                 `;
                 
-                // Evento para mostrar detalhes do participante
+                // Event to show participant details
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
                     showParticipantDetails(participant);
@@ -543,126 +683,239 @@
             participantsList.appendChild(list);
         }
         
-        // Função para exportar dados para CSV
+        // Export data to CSV
         function exportToCSV() {
-            if (!surveyData) return;
-            
-            // Criar cabeçalho do CSV
-            let csv = 'Nome,Email,Data de Resposta,Dias Disponíveis\n';
-            
-            // Adicionar dados de cada participante
-            for (const id in surveyData.participants) {
-                const p = surveyData.participants[id];
-                const name = p.name.replace(/,/g, ' '); // Remover vírgulas do nome
-                const email = p.email;
-                const createdAt = formatDate(p.created_at);
-                const dates = p.availability_dates.map(d => formatShortDate(d)).join('; ');
-                
-                csv += `"${name}","${email}","${createdAt}","${dates}"\n`;
+            if (!surveyData || !surveyData.participants) {
+                alert(currentLocale === 'en' ? 'Data not available for export' : 'Dados não disponíveis para exportação');
+                return;
             }
             
-            // Criar blob e link para download
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute('download', `survey_${surveyData.survey.title.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`);
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            try {
+                // Create CSV header
+                let csv = `${currentLocale === 'en' ? 'Name' : 'Nome'},${currentLocale === 'en' ? 'Email' : 'Email'},${currentLocale === 'en' ? 'Response Date' : 'Data de Resposta'},${currentLocale === 'en' ? 'Available Days' : 'Dias Disponíveis'}\n`;
+                
+                // Add data for each participant
+                for (const id in surveyData.participants) {
+                    if (Object.prototype.hasOwnProperty.call(surveyData.participants, id)) {
+                        const p = surveyData.participants[id];
+                        if (!p) continue;
+                        
+                        const name = p.name || '';
+                        const email = p.email || '';
+                        const createdAt = p.created_at ? formatDate(p.created_at) : '';
+                        
+                        let dates = '';
+                        if (Array.isArray(p.availability_dates)) {
+                            dates = p.availability_dates
+                                    .map(d => formatShortDate(d))
+                                    .join('; ');
+                        }
+                        
+                        // Escape fields properly for CSV
+                        const escapeCsv = (str) => {
+                            if (typeof str !== 'string') return '';
+                            return `"${str.replace(/"/g, '""')}"`;
+                        };
+                        
+                        csv += `${escapeCsv(name)},${escapeCsv(email)},${escapeCsv(createdAt)},${escapeCsv(dates)}\n`;
+                    }
+                }
+                
+                // Generate safe filename
+                let filename = 'survey_export_' + new Date().toISOString().slice(0, 10) + '.csv';
+                if (surveyData.survey && surveyData.survey.title) {
+                    // Replace characters not allowed in filenames
+                    const safeTitle = surveyData.survey.title.replace(/[^\w\s-]/g, '_');
+                    filename = `survey_${safeTitle}_${new Date().toISOString().slice(0, 10)}.csv`;
+                }
+                
+                // Create blob and download link
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                
+                // Use URL.createObjectURL for modern browser compatibility
+                if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                    // For IE
+                    window.navigator.msSaveOrOpenBlob(blob, filename);
+                } else {
+                    // For other browsers
+                    link.href = URL.createObjectURL(blob);
+                    link.setAttribute('download', filename);
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // Clean up
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                    }, 100);
+                }
+            } catch (error) {
+                console.error("Error exporting CSV:", error);
+                alert(currentLocale === 'en' ? 
+                      "Could not export data. Error: " + error.message : 
+                      "Não foi possível exportar os dados. Erro: " + error.message);
+            }
         }
         
-        // Evento para exportar dados
-        document.getElementById('export-btn').addEventListener('click', exportToCSV);
-        
-        // Evento para compartilhar
-        document.getElementById('share-btn').addEventListener('click', function() {
-            const link = document.getElementById('survey-link').value;
+        // Event to share
+        function shareSurvey() {
+            const link = document.getElementById('survey-link')?.value;
+            if (!link) return;
             
             if (navigator.share) {
                 navigator.share({
-                    title: 'Pesquisa de Disponibilidade',
-                    text: `Por favor, participe da pesquisa de disponibilidade: ${surveyData.survey.title}`,
+                    title: currentLocale === 'en' ? 'Availability Survey' : 'Pesquisa de Disponibilidade',
+                    text: currentLocale === 'en' ? 
+                          `Please participate in the availability survey: ${surveyData?.survey?.title || 'Survey'}` : 
+                          `Por favor, participe da pesquisa de disponibilidade: ${surveyData?.survey?.title || 'Pesquisa'}`,
                     url: link
                 })
                 .catch(err => {
-                    console.log('Erro ao compartilhar:', err);
+                    console.log('Error sharing:', err);
                     copyToClipboard('survey-link');
                 });
             } else {
                 copyToClipboard('survey-link');
             }
-        });
+        }
         
-        // Evento para busca de participantes
-        participantSearch.addEventListener('input', function() {
-            if (surveyData) {
-                updateParticipantsList(surveyData.participants, this.value);
-            }
-        });
+        // Event to export data
+        document.getElementById('export-btn').addEventListener('click', exportToCSV);
+        if (exportResultsBtn) exportResultsBtn.addEventListener('click', exportToCSV);
         
-        // Evento para destacar disponibilidades
-        highlightSwitch.addEventListener('change', function() {
-            const dayElements = document.querySelectorAll('.highlight-participants');
-            dayElements.forEach(el => {
-                if (this.checked) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
+        // Event to share
+        document.getElementById('share-btn').addEventListener('click', shareSurvey);
+        if (shareSurveyBtn) shareSurveyBtn.addEventListener('click', shareSurvey);
+        
+        // Event for participant search
+        if (participantSearch) {
+            participantSearch.addEventListener('input', function() {
+                if (surveyData && surveyData.participants) {
+                    updateParticipantsList(surveyData.participants, this.value);
                 }
             });
-        });
-        
-        // Função para copiar texto para a área de transferência
-        function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            element.select();
-            document.execCommand('copy');
-            
-            // Feedback visual
-            const button = element.nextElementSibling;
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i class="bi bi-check"></i>';
-            
-            setTimeout(() => {
-                button.innerHTML = originalHTML;
-            }, 2000);
         }
         
-        // Carregar dados da survey
-        async function loadSurveyData() {
-            try {
-                const response = await fetch(`/api/survey-data/{{ survey.token }}`, {
-                    headers: {
-                        'X-CSRFToken': csrfToken
+        // Event to highlight availabilities
+        if (highlightSwitch) {
+            highlightSwitch.addEventListener('change', function() {
+                const dayElements = document.querySelectorAll('.highlight-participants');
+                dayElements.forEach(el => {
+                    if (this.checked) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
                     }
                 });
+            });
+        }
+        
+        function initEmptyCalendar() {
+            if (!calendarEl) return;
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridYear'
+                },
+                locale: currentLocale.substring(0, 2),
+                height: 'auto'
+            });
+            
+            calendar.render();
+        }
+        
+        function handleApiError(response) {
+            console.error('API Error:', response.status);
+            showErrorMessage(currentLocale === 'en' ? 
+                'Error loading survey data. Please try again.' : 
+                'Erro ao carregar dados da survey. Por favor, tente novamente.');
+        }
+        
+        function showErrorMessage(message) {
+            const cardBody = document.querySelector('.card-body');
+            if (!cardBody) return;
+            
+            const alertElement = document.createElement('div');
+            alertElement.className = 'alert alert-danger alert-dismissible fade show';
+            alertElement.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>${currentLocale === 'en' ? 'Error:' : 'Erro:'}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            cardBody.prepend(alertElement);
+            
+            setTimeout(() => {
+                alertElement.classList.add('fade');
+                setTimeout(() => alertElement.remove(), 300);
+            }, 5000);
+        }
+        
+        function updateSurveyInfo(surveyInfo) {
+            // Update creation and expiry dates
+            if (creationDate) creationDate.textContent = formatDate(surveyInfo.created_at);
+            if (expiryDate) expiryDate.textContent = formatDate(surveyInfo.expires_at);
+        }
+        
+        // Load survey data
+        async function loadSurveyData() {
+            try {
+                // Get current survey token from URL
+                const pathParts = window.location.pathname.split('/');
+                const surveyToken = pathParts[pathParts.length - 1];
                 
-                if (response.ok) {
-                    surveyData = await response.json();
+                // First get basic survey info
+                const surveyInfoResponse = await fetch(`/api/survey-info/${surveyToken}`, {
+                    headers: { 'X-CSRFToken': window.csrfToken || '' }
+                });
+                
+                if (surveyInfoResponse.ok) {
+                    const surveyInfo = await surveyInfoResponse.json();
                     
-                    // Atualizar informações
-                    const participants = surveyData.participants;
-                    participantsCount.textContent = Object.keys(participants).length;
-                    creationDate.textContent = formatDate(surveyData.survey.created_at);
-                    expiryDate.textContent = formatDate(surveyData.survey.expires_at);
+                    // Update basic info
+                    updateSurveyInfo(surveyInfo);
                     
-                    // Inicializar calendário
-                    initCalendar(surveyData);
+                    // Initialize empty calendar
+                    initEmptyCalendar();
                     
-                    // Atualizar lista de participantes
-                    updateParticipantsList(participants);
+                    // Get full data with participants
+                    const response = await fetch(`/api/survey-data/${surveyToken}`, {
+                        headers: { 'X-CSRFToken': window.csrfToken || '' }
+                    });
+                    
+                    if (response.ok) {
+                        surveyData = await response.json();
+                        
+                        // Update participants count
+                        if (participantsCount) {
+                            participantsCount.textContent = Object.keys(surveyData.participants || {}).length;
+                        }
+                        
+                        // Update calendar with availability data
+                        initCalendar(surveyData);
+                        
+                        // Update participants list
+                        updateParticipantsList(surveyData.participants);
+                    } else {
+                        handleApiError(response);
+                    }
                 } else {
-                    const error = await response.json();
-                    alert(`Erro ao carregar dados: ${error.error || 'Erro desconhecido'}`);
+                    handleApiError(surveyInfoResponse);
                 }
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao comunicar com o servidor. Por favor, tente novamente.');
+                console.error('Error:', error);
+                showErrorMessage(currentLocale === 'en' ? 
+                    'Error communicating with server. Please try again.' : 
+                    'Erro ao comunicar com o servidor. Por favor, tente novamente.');
             }
         }
         
-        // Carregar dados ao carregar a página
+        // Load data on page load
         loadSurveyData();
     });
 </script>
