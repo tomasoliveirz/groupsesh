@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="{{ language_code|default('en') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}GroupSesh{% endblock %} | {% block subtitle %}{{ _('Coordenação de Disponibilidade Simplificada') }}{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    
+    <!-- CSS personalizado -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/themes.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- CSRF token para segurança -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<body class="theme-light" id="page-body">
+    <!-- Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="GroupSesh Logo" height="36" class="me-2">
+                    <span>GroupSesh</span>
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('index') }}">{{ _('Início') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('create_survey_page') }}">{{ _('Criar Sondagem') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('about_page') }}">{{ _('Sobre') }}</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="d-flex align-items-center">
+                        <!-- Seletor de Idioma -->
+                        <div class="dropdown me-3">
+                            <button class="btn btn-sm dropdown-toggle language-selector" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-globe2"></i>
+                                <span class="d-none d-md-inline-block ms-2">{{ languages[language_code|default('en')]['native_name'] }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% for code, lang in languages.items() %}
+                                <li>
+                                    <a class="dropdown-item {% if language_code|default('en') == code %}active{% endif %}" href="{{ url_for(request.endpoint, lang_code=code, **request.view_args) }}">
+                                        <span class="fi fi-{{ lang.flag }}"></span>
+                                        {{ lang.native_name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Alternador de Tema -->
+                        <button id="theme-toggle" class="btn btn-sm me-2">
+                            <i class="bi bi-moon-stars theme-icon-dark"></i>
+                            <i class="bi bi-sun theme-icon-light"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container my-4">
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="GroupSesh Logo" height="28" class="me-2">
+                        <h5 class="mb-0">GroupSesh</h5>
+                    </div>
+                    <p class="small">{{ _('Coordenação de disponibilidade simplificada.') }}</p>
+                    <p class="small">&copy; 2025 GroupSesh.com</p>
+                </div>
+                
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h6>{{ _('Links Úteis') }}</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}">{{ _('Início') }}</a></li>
+                        <li><a href="{{ url_for('create_survey_page') }}">{{ _('Criar Sondagem') }}</a></li>
+                        <li><a href="{{ url_for('about_page') }}">{{ _('Sobre') }}</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-4">
+                    <h6>{{ _('Conecte-se') }}</h6>
+                    <div class="social-links">
+                        <a href="https://github.com/tomasoliveirz" target="_blank" rel="noopener"><i class="bi bi-github"></i></a>
+                        <a href="https://linkedin.com/in/tomasoliveirz" target="_blank" rel="noopener"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://tomasoliveirz.github.io" target="_blank" rel="noopener"><i class="bi bi-globe"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+    
+    <!-- Flag Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.11.0/css/flag-icons.min.css"/>
+    
+    <!-- JavaScript global -->
+    <script>
+        // Configuração global para incluir CSRF token em todas as requisições AJAX
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Configuração para requisições fetch
+        const fetchConfig = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        };
+        
+        // Alternar Tema Claro/Escuro
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('page-body');
+            
+            // Verificar tema salvo
+            const savedTheme = localStorage.getItem('gs-theme');
+            if (savedTheme) {
+                body.className = savedTheme;
+            }
+            
+            themeToggle.addEventListener('click', function() {
+                if (body.classList.contains('theme-light')) {
+                    body.classList.remove('theme-light');
+                    body.classList.add('theme-dark');
+                    localStorage.setItem('gs-theme', 'theme-dark');
+                } else {
+                    body.classList.remove('theme-dark');
+                    body.classList.add('theme-light');
+                    localStorage.setItem('gs-theme', 'theme-light');
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

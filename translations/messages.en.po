@@ -1,0 +1,171 @@
+# English translations for GroupSesh.
+# Copyright (C) 2025 GroupSesh
+# This file is distributed under the same license as the GroupSesh project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GroupSesh 1.0\n"
+"Report-Msgid-Bugs-To: info@groupsesh.com\n"
+"POT-Creation-Date: 2025-03-23 18:14+0000\n"
+"PO-Revision-Date: 2025-03-23 18:14+0000\n"
+"Last-Translator: Tomás Oliveira <tomas@groupsesh.com>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# General
+msgid "Coordenação de Disponibilidade Simplificada"
+msgstr "Simplified Availability Coordination"
+
+msgid "Início"
+msgstr "Home"
+
+msgid "Criar Sondagem"
+msgstr "Create Poll"
+
+msgid "Sobre"
+msgstr "About"
+
+msgid "Links Úteis"
+msgstr "Useful Links"
+
+msgid "Conecte-se"
+msgstr "Connect"
+
+msgid "Coordenação de disponibilidade simplificada."
+msgstr "Simplified availability coordination."
+
+# Homepage
+msgid "Coordene disponibilidades com facilidade"
+msgstr "Coordinate availabilities with ease"
+
+msgid "GroupSesh simplifica o planejamento de eventos ao reunir as disponibilidades de todos os participantes em um único lugar."
+msgstr "GroupSesh simplifies event planning by gathering everyone's availability in one place."
+
+msgid "Saiba Mais"
+msgstr "Learn More"
+
+msgid "Tem um link de sondagem?"
+msgstr "Have a poll link?"
+
+msgid "Cole o link da sondagem que você recebeu para participar."
+msgstr "Paste the poll link you received to participate."
+
+msgid "Cole o link da sondagem aqui"
+msgstr "Paste poll link here"
+
+msgid "Acessar"
+msgstr "Access"
+
+msgid "Como Funciona"
+msgstr "How It Works"
+
+msgid "GroupSesh torna simples coordenar horários entre várias pessoas."
+msgstr "GroupSesh makes it simple to coordinate schedules between multiple people."
+
+msgid "Crie uma Sondagem"
+msgstr "Create a Poll"
+
+msgid "Preencha um formulário simples e obtenha um link único para compartilhar com os participantes."
+msgstr "Fill out a simple form and get a unique link to share with participants."
+
+msgid "Compartilhe o Link"
+msgstr "Share the Link"
+
+msgid "Envie o link para todos os participantes indicarem suas disponibilidades no calendário."
+msgstr "Send the link to all participants to indicate their availability on the calendar."
+
+msgid "Visualize Resultados"
+msgstr "View Results"
+
+msgid "Acesse o dashboard para ver todas as disponibilidades e escolha a melhor data para todos."
+msgstr "Access the dashboard to see all availabilities and choose the best date for everyone."
+
+msgid "Por que escolher GroupSesh?"
+msgstr "Why choose GroupSesh?"
+
+msgid "Economize Tempo"
+msgstr "Save Time"
+
+msgid "Esqueça as trocas intermináveis de mensagens. Coordene disponibilidades em um único lugar."
+msgstr "Forget about endless message exchanges. Coordinate availability in one place."
+
+msgid "Suporte Multilíngue"
+msgstr "Multilingual Support"
+
+msgid "Disponível em vários idiomas para facilitar a coordenação com equipes globais."
+msgstr "Available in multiple languages to facilitate coordination with global teams."
+
+msgid "Simples e Seguro"
+msgstr "Simple and Secure"
+
+msgid "Sem necessidade de criar conta. Links seguros e interface intuitiva."
+msgstr "No need to create an account. Secure links and intuitive interface."
+
+msgid "Preview do Dashboard"
+msgstr "Dashboard Preview"
+
+msgid "Pronto para coordenar sua próxima reunião?"
+msgstr "Ready to coordinate your next meeting?"
+
+msgid "Crie uma sondagem gratuitamente e compartilhe com sua equipe em segundos."
+msgstr "Create a poll for free and share with your team in seconds."
+
+msgid "Começar Agora"
+msgstr "Start Now"
+
+msgid "Link inválido. Por favor, verifique e tente novamente."
+msgstr "Invalid link. Please check and try again."
+
+# Error pages
+msgid "Página não encontrada"
+msgstr "Page Not Found"
+
+msgid "A página que você está procurando não existe ou foi removida."
+msgstr "The page you're looking for doesn't exist or has been removed."
+
+msgid "Voltar para a página inicial"
+msgstr "Back to Home"
+
+msgid "Voltar"
+msgstr "Go Back"
+
+msgid "Erro no Servidor"
+msgstr "Server Error"
+
+msgid "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde."
+msgstr "An error occurred while processing your request. Please try again later."
+
+# API Messages
+msgid "Survey não encontrada"
+msgstr "Poll not found"
+
+msgid "Survey não encontrada ou expirada"
+msgstr "Poll not found or expired"
+
+msgid "Survey expirada"
+msgstr "Poll expired"
+
+msgid "Campo obrigatório ausente: {}"
+msgstr "Required field missing: {}"
+
+msgid "E-mail inválido"
+msgstr "Invalid email"
+
+msgid "Survey criada com sucesso"
+msgstr "Poll created successfully"
+
+msgid "Erro ao criar survey"
+msgstr "Error creating poll"
+
+msgid "Formato de datas inválido"
+msgstr "Invalid date format"
+
+msgid "Disponibilidade registrada com sucesso"
+msgstr "Availability registered successfully"
+
+msgid "Erro ao registrar disponibilidade"
+msgstr "Error registering availability"

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="#4F46E5" opacity="0.1"/>
+  
+  <!-- Calendar Base -->
+  <rect x="40" y="50" width="120" height="110" rx="8" fill="#FFFFFF" stroke="#4F46E5" stroke-width="6"/>
+  
+  <!-- Calendar Header -->
+  <rect x="40" y="50" width="120" height="30" rx="8" fill="#4F46E5"/>
+  
+  <!-- Calendar Grid Lines -->
+  <line x1="40" y1="100" x2="160" y2="100" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="40" y1="130" x2="160" y2="130" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="80" y1="80" x2="80" y2="160" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="120" y1="80" x2="120" y2="160" stroke="#E5E7EB" stroke-width="2"/>
+  
+  <!-- Check Marks -->
+  <circle cx="60" cy="115" r="8" fill="#10B981"/>
+  <path d="M55 115 L59 119 L65 111" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <circle cx="100" cy="145" r="8" fill="#10B981"/>
+  <path d="M95 145 L99 149 L105 141" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <circle cx="140" cy="115" r="8" fill="#10B981"/>
+  <path d="M135 115 L139 119 L145 111" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Calendar Pins -->
+  <circle cx="50" cy="50" r="3" fill="#F59E0B"/>
+  <circle cx="150" cy="50" r="3" fill="#F59E0B"/>
+</svg>

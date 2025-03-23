@@ -1,0 +1,669 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ survey.title }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
+<style>
+    .participant-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .participant-card:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    .fc-day-has-participants {
+        position: relative;
+    }
+    .fc-day-has-participants:after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 12px 12px 0;
+        border-color: transparent #198754 transparent transparent;
+    }
+    .participant-count {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background-color: #198754;
+        color: white;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+        line-height: 22px;
+        text-align: center;
+    }
+    .highlight-participants .fc-daygrid-day-frame {
+        transition: background-color 0.3s;
+    }
+    .highlight-participants[data-count="0"] .fc-daygrid-day-frame {
+        background-color: #f8d7da !important;
+    }
+    .highlight-participants[data-count="1"] .fc-daygrid-day-frame {
+        background-color: #fff3cd !important;
+    }
+    .highlight-participants[data-count="2"] .fc-daygrid-day-frame {
+        background-color: #d1e7dd !important;
+    }
+    .highlight-participants[data-count="3"] .fc-daygrid-day-frame,
+    .highlight-participants[data-count="4"] .fc-daygrid-day-frame,
+    .highlight-participants[data-count="5+"] .fc-daygrid-day-frame {
+        background-color: #bfe5c7 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Mensagem de Survey Expirada -->
+{% if is_expired %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Atenção:</strong> Esta survey está expirada. Os participantes não podem mais responder, mas você ainda pode visualizar os resultados.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+</div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">{{ survey.title }}</h2>
+                
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light btn-sm" id="share-btn">
+                        <i class="bi bi-share-fill"></i> Compartilhar
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" id="export-btn">
+                        <i class="bi bi-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Informações da Survey</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if survey.description %}
+                                <p class="card-text">{{ survey.description }}</p>
+                                <hr>
+                                {% endif %}
+                                
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Criado por:</span>
+                                        <strong>{{ survey.admin_name }}</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Data de criação:</span>
+                                        <strong id="creation-date"></strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Data de expiração:</span>
+                                        <strong id="expiry-date"></strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>Total de participantes:</span>
+                                        <strong id="participants-count">Carregando...</strong>
+                                    </li>
+                                </ul>
+                                
+                                <div class="mt-3">
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">Link de Participantes</span>
+                                        <input type="text" class="form-control" id="survey-link" readonly value="{{ url_for('join_survey_page', token=survey.token, _external=True) }}">
+                                        <button class="btn btn-outline-secondary" type="button" 
+                                                onclick="copyToClipboard('survey-link')">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <ul class="nav nav-tabs card-header-tabs" id="dashboard-tabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="calendar-tab" data-bs-toggle="tab" 
+                                                data-bs-target="#calendar-tab-pane" type="button" role="tab" 
+                                                aria-controls="calendar-tab-pane" aria-selected="true">
+                                            Calendário
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="participants-tab" data-bs-toggle="tab" 
+                                                data-bs-target="#participants-tab-pane" type="button" role="tab" 
+                                                aria-controls="participants-tab-pane" aria-selected="false">
+                                            Participantes
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content" id="dashboard-tabs-content">
+                                    <div class="tab-pane fade show active" id="calendar-tab-pane" role="tabpanel" 
+                                         aria-labelledby="calendar-tab" tabindex="0">
+                                        
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="highlight-switch">
+                                                <label class="form-check-label" for="highlight-switch">
+                                                    Destacar disponibilidades
+                                                </label>
+                                            </div>
+                                            
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="prev-month-btn">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="today-btn">
+                                                    Hoje
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="next-month-btn">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="calendar"></div>
+                                    </div>
+                                    
+                                    <div class="tab-pane fade" id="participants-tab-pane" role="tabpanel" 
+                                         aria-labelledby="participants-tab" tabindex="0">
+                                        
+                                        <div class="mb-3">
+                                            <input type="text" class="form-control" id="participant-search" 
+                                                   placeholder="Buscar participante por nome ou e-mail...">
+                                        </div>
+                                        
+                                        <div id="participants-list">
+                                            <div class="text-center my-5">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Carregando...</span>
+                                                </div>
+                                                <p class="mt-2">Carregando participantes...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de Participantes -->
+        <div class="modal fade" id="participants-modal" tabindex="-1" aria-labelledby="participants-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="participants-modal-label">Participantes para o dia <span id="modal-date"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="modal-participants-list" class="list-group list-group-flush">
+                            <!-- Será preenchido via JavaScript -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de Detalhe do Participante -->
+        <div class="modal fade" id="participant-detail-modal" tabindex="-1" aria-labelledby="participant-detail-modal-label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="participant-detail-modal-label">Detalhes do Participante</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="participant-info">
+                            <!-- Será preenchido via JavaScript -->
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Dias disponíveis:</h6>
+                            <div id="participant-dates" class="list-group list-group-flush">
+                                <!-- Será preenchido via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos do DOM
+        const calendarEl = document.getElementById('calendar');
+        const participantsList = document.getElementById('participants-list');
+        const participantsCount = document.getElementById('participants-count');
+        const creationDate = document.getElementById('creation-date');
+        const expiryDate = document.getElementById('expiry-date');
+        const modalDate = document.getElementById('modal-date');
+        const modalParticipantsList = document.getElementById('modal-participants-list');
+        const participantsModal = new bootstrap.Modal(document.getElementById('participants-modal'));
+        const participantDetailModal = new bootstrap.Modal(document.getElementById('participant-detail-modal'));
+        const participantSearch = document.getElementById('participant-search');
+        const highlightSwitch = document.getElementById('highlight-switch');
+        
+        // Variáveis globais
+        let surveyData = null;
+        let calendar = null;
+        
+        // Função para formatar data
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Função para formatar data curta (sem hora)
+        function formatShortDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        
+        // Inicializar calendário
+        function initCalendar(data) {
+            // Mapear datas para eventos do calendário
+            const events = [];
+            
+            // Para cada data com participantes
+            for (const dateStr in data.availability_by_date) {
+                const participants = data.availability_by_date[dateStr];
+                events.push({
+                    start: dateStr,
+                    end: dateStr,
+                    display: 'background',
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    extendedProps: {
+                        participants: participants,
+                        count: participants.length
+                    }
+                });
+            }
+            
+            // Inicializar calendário
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridYear'
+                },
+                views: {
+                    dayGridMonth: {
+                        buttonText: 'Mês'
+                    },
+                    dayGridYear: {
+                        buttonText: 'Ano',
+                        duration: { years: 1 }
+                    }
+                },
+                locale: 'pt-br',
+                height: 'auto',
+                events: events,
+                eventDidMount: function(info) {
+                    if (info.event.extendedProps.count) {
+                        const count = info.event.extendedProps.count;
+                        
+                        // Adicionar classe para estilização
+                        info.el.closest('.fc-daygrid-day').classList.add('fc-day-has-participants');
+                        
+                        // Adicionar contador de participantes
+                        const countEl = document.createElement('div');
+                        countEl.className = 'participant-count';
+                        countEl.textContent = count;
+                        info.el.closest('.fc-daygrid-day-frame').appendChild(countEl);
+                        
+                        // Adicionar atributo para destaque condicional
+                        const dayEl = info.el.closest('.fc-daygrid-day');
+                        dayEl.classList.add('highlight-participants');
+                        
+                        // Categorizar por número de participantes
+                        let category = count >= 5 ? '5+' : count.toString();
+                        dayEl.setAttribute('data-count', category);
+                    }
+                },
+                dateClick: function(info) {
+                    const dateStr = info.dateStr;
+                    const participants = data.availability_by_date[dateStr] || [];
+                    
+                    if (participants.length > 0) {
+                        showParticipantsModal(dateStr, participants);
+                    }
+                }
+            });
+            
+            calendar.render();
+            
+            // Botões de navegação
+            document.getElementById('prev-month-btn').addEventListener('click', function() {
+                calendar.prev();
+            });
+            
+            document.getElementById('today-btn').addEventListener('click', function() {
+                calendar.today();
+            });
+            
+            document.getElementById('next-month-btn').addEventListener('click', function() {
+                calendar.next();
+            });
+        }
+        
+        // Função para mostrar modal de participantes por data
+        function showParticipantsModal(dateStr, participants) {
+            // Formatar data para o título do modal
+            modalDate.textContent = formatShortDate(dateStr);
+            
+            // Limpar lista anterior
+            modalParticipantsList.innerHTML = '';
+            
+            // Preencher com participantes
+            if (participants.length === 0) {
+                modalParticipantsList.innerHTML = '<div class="text-center py-3">Nenhum participante disponível neste dia.</div>';
+            } else {
+                participants.forEach(participant => {
+                    const participantId = participant.participant_id;
+                    const fullParticipant = surveyData.participants[participantId];
+                    
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${participant.name}</h6>
+                        </div>
+                        <p class="mb-1">${participant.email}</p>
+                    `;
+                    
+                    // Evento para mostrar detalhes do participante
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showParticipantDetails(fullParticipant);
+                    });
+                    
+                    modalParticipantsList.appendChild(item);
+                });
+            }
+            
+            // Mostrar modal
+            participantsModal.show();
+        }
+        
+        // Função para mostrar detalhes de um participante
+        function showParticipantDetails(participant) {
+            // Fechar modal anterior
+            participantsModal.hide();
+            
+            // Preencher informações
+            const participantInfo = document.getElementById('participant-info');
+            participantInfo.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${participant.name}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">${participant.email}</h6>
+                        <p class="card-text">
+                            <small class="text-muted">Resposta enviada em: ${formatDate(participant.created_at)}</small>
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Preencher datas disponíveis
+            const datesList = document.getElementById('participant-dates');
+            datesList.innerHTML = '';
+            
+            if (participant.availability_dates.length === 0) {
+                datesList.innerHTML = '<div class="text-center py-3">Nenhuma data selecionada.</div>';
+            } else {
+                // Ordenar datas
+                const sortedDates = [...participant.availability_dates].sort();
+                
+                sortedDates.forEach(dateStr => {
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item';
+                    item.textContent = formatShortDate(dateStr);
+                    datesList.appendChild(item);
+                });
+            }
+            
+            // Mostrar modal
+            participantDetailModal.show();
+        }
+        
+        // Função para atualizar lista de participantes
+        function updateParticipantsList(participants, filter = '') {
+            participantsList.innerHTML = '';
+            
+            const participantIds = Object.keys(participants);
+            
+            if (participantIds.length === 0) {
+                participantsList.innerHTML = `
+                    <div class="text-center py-5">
+                        <div class="display-4 text-muted mb-3">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <p class="lead">Nenhum participante ainda.</p>
+                        <p class="text-muted">Compartilhe o link da survey para receber respostas.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Filtrar participantes
+            let filteredIds = participantIds;
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredIds = participantIds.filter(id => {
+                    const p = participants[id];
+                    return p.name.toLowerCase().includes(lowerFilter) || 
+                           p.email.toLowerCase().includes(lowerFilter);
+                });
+            }
+            
+            if (filteredIds.length === 0) {
+                participantsList.innerHTML = `
+                    <div class="text-center py-3">
+                        <p>Nenhum participante encontrado com o termo "${filter}".</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar por nome
+            filteredIds.sort((a, b) => {
+                return participants[a].name.localeCompare(participants[b].name);
+            });
+            
+            // Criar lista
+            const list = document.createElement('div');
+            list.className = 'list-group';
+            
+            filteredIds.forEach(id => {
+                const participant = participants[id];
+                
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'list-group-item list-group-item-action participant-card';
+                item.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${participant.name}</h6>
+                        <small>${formatShortDate(participant.created_at)}</small>
+                    </div>
+                    <p class="mb-1">${participant.email}</p>
+                    <small class="text-muted">
+                        ${participant.availability_dates.length} ${participant.availability_dates.length === 1 ? 'dia disponível' : 'dias disponíveis'}
+                    </small>
+                `;
+                
+                // Evento para mostrar detalhes do participante
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showParticipantDetails(participant);
+                });
+                
+                list.appendChild(item);
+            });
+            
+            participantsList.appendChild(list);
+        }
+        
+        // Função para exportar dados para CSV
+        function exportToCSV() {
+            if (!surveyData) return;
+            
+            // Criar cabeçalho do CSV
+            let csv = 'Nome,Email,Data de Resposta,Dias Disponíveis\n';
+            
+            // Adicionar dados de cada participante
+            for (const id in surveyData.participants) {
+                const p = surveyData.participants[id];
+                const name = p.name.replace(/,/g, ' '); // Remover vírgulas do nome
+                const email = p.email;
+                const createdAt = formatDate(p.created_at);
+                const dates = p.availability_dates.map(d => formatShortDate(d)).join('; ');
+                
+                csv += `"${name}","${email}","${createdAt}","${dates}"\n`;
+            }
+            
+            // Criar blob e link para download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `survey_${surveyData.survey.title.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Evento para exportar dados
+        document.getElementById('export-btn').addEventListener('click', exportToCSV);
+        
+        // Evento para compartilhar
+        document.getElementById('share-btn').addEventListener('click', function() {
+            const link = document.getElementById('survey-link').value;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Pesquisa de Disponibilidade',
+                    text: `Por favor, participe da pesquisa de disponibilidade: ${surveyData.survey.title}`,
+                    url: link
+                })
+                .catch(err => {
+                    console.log('Erro ao compartilhar:', err);
+                    copyToClipboard('survey-link');
+                });
+            } else {
+                copyToClipboard('survey-link');
+            }
+        });
+        
+        // Evento para busca de participantes
+        participantSearch.addEventListener('input', function() {
+            if (surveyData) {
+                updateParticipantsList(surveyData.participants, this.value);
+            }
+        });
+        
+        // Evento para destacar disponibilidades
+        highlightSwitch.addEventListener('change', function() {
+            const dayElements = document.querySelectorAll('.highlight-participants');
+            dayElements.forEach(el => {
+                if (this.checked) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        });
+        
+        // Função para copiar texto para a área de transferência
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            // Feedback visual
+            const button = element.nextElementSibling;
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i>';
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 2000);
+        }
+        
+        // Carregar dados da survey
+        async function loadSurveyData() {
+            try {
+                const response = await fetch(`/api/survey-data/{{ survey.token }}`, {
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    surveyData = await response.json();
+                    
+                    // Atualizar informações
+                    const participants = surveyData.participants;
+                    participantsCount.textContent = Object.keys(participants).length;
+                    creationDate.textContent = formatDate(surveyData.survey.created_at);
+                    expiryDate.textContent = formatDate(surveyData.survey.expires_at);
+                    
+                    // Inicializar calendário
+                    initCalendar(surveyData);
+                    
+                    // Atualizar lista de participantes
+                    updateParticipantsList(participants);
+                } else {
+                    const error = await response.json();
+                    alert(`Erro ao carregar dados: ${error.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao comunicar com o servidor. Por favor, tente novamente.');
+            }
+        }
+        
+        // Carregar dados ao carregar a página
+        loadSurveyData();
+    });
+</script>
+{% endblock %}

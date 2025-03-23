@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Início') }}{% endblock %}
+
+{% block content %}
+<section class="hero py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+            <h1 class="display-4 fw-bold mb-3">{{ _('Coordene disponibilidades com facilidade') }}</h1>
+            <p class="lead mb-4">{{ _('GroupSesh simplifica o planejamento de eventos ao reunir as disponibilidades de todos os participantes em um único lugar.') }}</p>
+            <div class="d-flex flex-column flex-sm-row gap-3">
+                <a href="{{ url_for('create_survey_page') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-calendar-plus me-2"></i>{{ _('Criar Sondagem') }}
+                </a>
+                <a href="#features" class="btn btn-outline-primary btn-lg">
+                    {{ _('Saiba Mais') }}<i class="bi bi-arrow-down ms-2"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="hero-image">
+                <img src="{{ url_for('static', filename='img/hero-calendar.svg') }}" alt="{{ _('Calendário GroupSesh') }}" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="survey-link" class="my-5 py-3">
+    <div class="card">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-3 mb-lg-0">
+                    <h3>{{ _('Tem um link de sondagem?') }}</h3>
+                    <p class="text-muted mb-0">{{ _('Cole o link da sondagem que você recebeu para participar.') }}</p>
+                </div>
+                <div class="col-lg-7">
+                    <div class="input-group">
+                        <input type="text" id="survey-link-input" class="form-control form-control-lg" placeholder="{{ _('Cole o link da sondagem aqui') }}">
+                        <button class="btn btn-primary btn-lg" type="button" id="go-to-survey">
+                            {{ _('Acessar') }}<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="my-5 py-4">
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">{{ _('Como Funciona') }}</h2>
+        <p class="lead mx-auto" style="max-width: 700px;">{{ _('GroupSesh torna simples coordenar horários entre várias pessoas.') }}</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h3 class="h4 mb-3">{{ _('Crie uma Sondagem') }}</h3>
+                    <p>{{ _('Preencha um formulário simples e obtenha um link único para compartilhar com os participantes.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-share"></i>
+                    </div>
+                    <h3 class="h4 mb-3">{{ _('Compartilhe o Link') }}</h3>
+                    <p>{{ _('Envie o link para todos os participantes indicarem suas disponibilidades no calendário.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 feature-card">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <h3 class="h4 mb-3">{{ _('Visualize Resultados') }}</h3>
+                    <p>{{ _('Acesse o dashboard para ver todas as disponibilidades e escolha a melhor data para todos.') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="benefits my-5 py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-5 mb-4 mb-lg-0">
+            <h2 class="mb-4">{{ _('Por que escolher GroupSesh?') }}</h2>
+            
+            <div class="benefit-item d-flex align-items-start mb-4">
+                <div class="benefit-icon me-3">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div>
+                    <h4>{{ _('Economize Tempo') }}</h4>
+                    <p class="mb-0">{{ _('Esqueça as trocas intermináveis de mensagens. Coordene disponibilidades em um único lugar.') }}</p>
+                </div>
+            </div>
+            
+            <div class="benefit-item d-flex align-items-start mb-4">
+                <div class="benefit-icon me-3">
+                    <i class="bi bi-globe2"></i>
+                </div>
+                <div>
+                    <h4>{{ _('Suporte Multilíngue') }}</h4>
+                    <p class="mb-0">{{ _('Disponível em vários idiomas para facilitar a coordenação com equipes globais.') }}</p>
+                </div>
+            </div>
+            
+            <div class="benefit-item d-flex align-items-start">
+                <div class="benefit-icon me-3">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                    <h4>{{ _('Simples e Seguro') }}</h4>
+                    <p class="mb-0">{{ _('Sem necessidade de criar conta. Links seguros e interface intuitiva.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-7">
+            <div class="dashboard-preview p-2 rounded">
+                <img src="{{ url_for('static', filename='img/dashboard-preview.png') }}" alt="{{ _('Preview do Dashboard') }}" class="img-fluid rounded shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section text-center my-5 py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="display-5 fw-bold mb-4">{{ _('Pronto para coordenar sua próxima reunião?') }}</h2>
+            <p class="lead mb-5">{{ _('Crie uma sondagem gratuitamente e compartilhe com sua equipe em segundos.') }}</p>
+            <a href="{{ url_for('create_survey_page') }}" class="btn btn-primary btn-lg px-5 py-3 fw-bold">
+                {{ _('Começar Agora') }}<i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const linkInput = document.getElementById('survey-link-input');
+        const goButton = document.getElementById('go-to-survey');
+        
+        // Função para processar o link
+        function processLink() {
+            let link = linkInput.value.trim();
+            
+            // Verificar se o link está vazio
+            if (!link) {
+                return;
+            }
+            
+            // Tentar extrair o token do link (formato: /survey/TOKEN ou /dashboard/TOKEN)
+            let token = null;
+            
+            try {
+                // Se for uma URL completa
+                const url = new URL(link);
+                const pathParts = url.pathname.split('/');
+                // O token deve ser o último elemento do caminho
+                token = pathParts[pathParts.length - 1];
+            } catch (e) {
+                // Se não for uma URL válida, verificar se é apenas o token
+                if (link.match(/^[0-9a-f-]{36}$/)) {
+                    token = link;
+                } else {
+                    // Se tiver o formato /survey/TOKEN
+                    const parts = link.split('/');
+                    token = parts[parts.length - 1];
+                }
+            }
+            
+            // Se encontrou um token, redirecionar
+            if (token) {
+                window.location.href = `/survey/${token}`;
+            } else {
+                // Feedback visual para link inválido
+                linkInput.classList.add('is-invalid');
+                
+                // Criar mensagem de erro se não existir
+                if (!document.getElementById('survey-link-error')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.id = 'survey-link-error';
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.innerText = "{{ _('Link inválido. Por favor, verifique e tente novamente.') }}";
+                    linkInput.parentNode.appendChild(errorDiv);
+                }
+                
+                // Remover a classe após alguns segundos
+                setTimeout(() => {
+                    linkInput.classList.remove('is-invalid');
+                }, 3000);
+            }
+        }
+        
+        // Adicionar eventos
+        goButton.addEventListener('click', processLink);
+        linkInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                processLink();
+            }
+        });
+        
+        // Limpar feedback ao digitar
+        linkInput.addEventListener('input', function() {
+            linkInput.classList.remove('is-invalid');
+        });
+        
+        // Animação para scroll suave
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

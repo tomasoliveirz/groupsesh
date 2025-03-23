@@ -1,0 +1,22 @@
+# es translations for GroupSesh.
+# Copyright (C) 2025 GroupSesh
+# This file is distributed under the same license as the GroupSesh project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GroupSesh 1.0\n"
+"Report-Msgid-Bugs-To: info@groupsesh.com\n"
+"POT-Creation-Date: 2025-03-23 18:14+0000\n"
+"PO-Revision-Date: 2025-03-23 18:14+0000\n"
+"Last-Translator: Tomás Oliveira <tomas@groupsesh.com>\n"
+"Language-Team: es\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Coordenação de Disponibilidade Simplificada"
+msgstr "Simplified Availability Coordination"
+
+msgid "Início"
+msgstr "Home"

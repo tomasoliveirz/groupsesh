@@ -1,0 +1,130 @@
+/* Estilos personalizados para o calendário */
+
+/* Container do calendário */
+.fc {
+    max-width: 100%;
+    font-family: inherit;
+}
+
+/* Cabeçalho do calendário */
+.fc-header-toolbar {
+    margin-bottom: 1em !important;
+}
+
+/* Botões do calendário */
+.fc-button {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+}
+
+.fc-button:hover {
+    background-color: #e9ecef !important;
+    color: #333 !important;
+}
+
+.fc-button-primary:not(:disabled).fc-button-active,
+.fc-button-primary:not(:disabled):active {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+    border-color: #0d6efd !important;
+}
+
+/* Cabeçalho dos dias */
+.fc-col-header-cell {
+    background-color: #f8f9fa;
+    padding: 10px 0 !important;
+    font-weight: 600;
+}
+
+/* Células dos dias */
+.fc-daygrid-day {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.fc-daygrid-day:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.fc-day-today {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Altura mínima das células */
+.fc-daygrid-day-frame {
+    min-height: 100px;
+}
+
+/* Número do dia */
+.fc-daygrid-day-number {
+    font-weight: 500;
+    padding: 8px !important;
+}
+
+/* Estilo para dias com eventos */
+.fc-daygrid-day-events {
+    margin-top: 0 !important;
+}
+
+/* Visualização anual */
+.fc-dayGridYear-view .fc-daygrid-day-frame {
+    min-height: 50px;
+}
+
+.fc-dayGridYear-view .fc-daygrid-day-top {
+    justify-content: center;
+}
+
+.fc-dayGridYear-view .fc-daygrid-day-number {
+    padding: 2px !important;
+    font-size: 0.8em;
+}
+
+/* Estilos para dias selecionados */
+.fc-day-selected {
+    background-color: rgba(13, 110, 253, 0.2);
+}
+
+/* Animações */
+.fc-day-future, .fc-day-past {
+    transition: background-color 0.3s ease;
+}
+
+/* Dias passados */
+.fc-day-past {
+    background-color: #f8f9fa;
+}
+
+/* Media queries para responsividade */
+@media (max-width: 768px) {
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+    }
+}
+
+/* Estilo para dias destacados */
+.highlight-participants.active[data-count="0"] .fc-daygrid-day-frame {
+    background-color: #f8d7da !important; /* vermelho claro */
+}
+
+.highlight-participants.active[data-count="1"] .fc-daygrid-day-frame {
+    background-color: #fff3cd !important; /* amarelo claro */
+}
+
+.highlight-participants.active[data-count="2"] .fc-daygrid-day-frame {
+    background-color: #d1e7dd !important; /* verde claro */
+}
+
+.highlight-participants.active[data-count="3"] .fc-daygrid-day-frame,
+.highlight-participants.active[data-count="4"] .fc-daygrid-day-frame,
+.highlight-participants.active[data-count="5+"] .fc-daygrid-day-frame {
+    background-color: #bfe5c7 !important; /* verde médio */
+}

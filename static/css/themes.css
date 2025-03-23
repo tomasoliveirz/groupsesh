@@ -1,0 +1,151 @@
+/* Temas para GroupSesh */
+
+/* Tema Claro (padrão) */
+.theme-light {
+    --gs-primary: #4F46E5;
+    --gs-primary-hover: #4338CA;
+    --gs-secondary: #10B981;
+    --gs-accent: #F59E0B;
+    --gs-dark: #111827;
+    --gs-medium: #374151;
+    --gs-light: #F3F4F6;
+    --gs-white: #FFFFFF;
+    --gs-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --gs-text-primary: #111827;
+    --gs-text-secondary: #4B5563;
+    --gs-text-muted: #6B7280;
+    --gs-border-color: #E5E7EB;
+    --gs-success: #059669;
+    --gs-danger: #DC2626;
+    --gs-warning: #FBBF24;
+    --gs-info: #3B82F6;
+}
+
+/* Tema Escuro */
+.theme-dark {
+    --gs-primary: #6366F1;
+    --gs-primary-hover: #4F46E5;
+    --gs-secondary: #10B981;
+    --gs-accent: #F59E0B;
+    --gs-dark: #111827;
+    --gs-medium: #374151;
+    --gs-light: #1F2937;
+    --gs-white: #111827;
+    --gs-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --gs-text-primary: #F9FAFB;
+    --gs-text-secondary: #E5E7EB;
+    --gs-text-muted: #9CA3AF;
+    --gs-border-color: #374151;
+    --gs-success: #10B981;
+    --gs-danger: #EF4444;
+    --gs-warning: #F59E0B;
+    --gs-info: #3B82F6;
+}
+
+/* Aplicações de Tema Escuro */
+.theme-dark {
+    background-color: var(--gs-light);
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .navbar,
+.theme-dark .card,
+.theme-dark .card-header,
+.theme-dark footer {
+    background-color: var(--gs-white);
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .form-control,
+.theme-dark .btn-outline-secondary,
+.theme-dark .language-selector,
+.theme-dark #theme-toggle {
+    background-color: var(--gs-medium);
+    border-color: var(--gs-border-color);
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .form-control:focus {
+    background-color: var(--gs-medium);
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .dropdown-menu {
+    background-color: var(--gs-medium);
+    border-color: var(--gs-border-color);
+}
+
+.theme-dark .dropdown-item {
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .dropdown-item:hover {
+    background-color: var(--gs-dark);
+}
+
+.theme-dark .dropdown-item.active {
+    background-color: var(--gs-primary);
+}
+
+.theme-dark .modal-content {
+    background-color: var(--gs-white);
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .text-muted {
+    color: var(--gs-text-muted) !important;
+}
+
+.theme-dark .social-links a {
+    background-color: var(--gs-medium);
+    color: var(--gs-text-secondary);
+}
+
+.theme-dark .social-links a:hover {
+    background-color: var(--gs-primary);
+    color: white;
+}
+
+.theme-dark hr {
+    border-color: var(--gs-border-color);
+}
+
+/* Ajustes Calendar para Tema Escuro */
+.theme-dark .fc-theme-standard .fc-scrollgrid,
+.theme-dark .fc-theme-standard td,
+.theme-dark .fc-theme-standard th {
+    border-color: var(--gs-border-color);
+}
+
+.theme-dark .fc-theme-standard .fc-scrollgrid {
+    border-color: var(--gs-border-color);
+}
+
+.theme-dark .fc-col-header-cell {
+    background-color: var(--gs-medium) !important;
+}
+
+.theme-dark .fc-daygrid-day-top a {
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .fc-day-today {
+    background-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+.theme-dark .fc-daygrid-day:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.theme-dark .fc-day-past {
+    background-color: var(--gs-dark) !important;
+}
+
+.theme-dark .alert-light {
+    background-color: var(--gs-medium);
+    color: var(--gs-text-primary);
+}
+
+.theme-dark .alert-info {
+    background-color: rgba(59, 130, 246, 0.2);
+}

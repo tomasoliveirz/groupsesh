@@ -1,0 +1,379 @@
+/* GroupSesh - Estilos principais */
+
+:root {
+    --gs-primary: #4F46E5;
+    --gs-primary-hover: #4338CA;
+    --gs-secondary: #10B981;
+    --gs-accent: #F59E0B;
+    --gs-dark: #111827;
+    --gs-medium: #374151;
+    --gs-light: #F3F4F6;
+    --gs-white: #FFFFFF;
+    --gs-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --gs-text-primary: #111827;
+    --gs-text-secondary: #4B5563;
+    --gs-text-muted: #6B7280;
+    --gs-border-color: #E5E7EB;
+    --gs-success: #059669;
+    --gs-danger: #DC2626;
+    --gs-warning: #FBBF24;
+    --gs-info: #3B82F6;
+}
+
+/* Estilos globais */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: var(--gs-text-primary);
+    background-color: var(--gs-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+main {
+    flex: 1;
+}
+
+/* Tipografia */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--gs-text-primary);
+}
+
+a {
+    color: var(--gs-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--gs-primary-hover);
+}
+
+.lead {
+    font-weight: 400;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--gs-white);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--gs-primary);
+}
+
+.navbar-brand span {
+    color: var(--gs-primary);
+}
+
+.navbar-brand:hover {
+    color: var(--gs-primary-hover);
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    color: var(--gs-text-primary);
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--gs-primary);
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--gs-primary);
+}
+
+/* Botões */
+.btn {
+    font-weight: 500;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--gs-primary);
+    border-color: var(--gs-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--gs-primary-hover);
+    border-color: var(--gs-primary-hover);
+}
+
+.btn-secondary {
+    background-color: var(--gs-secondary);
+    border-color: var(--gs-secondary);
+}
+
+.btn-outline-primary {
+    color: var(--gs-primary);
+    border-color: var(--gs-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--gs-primary);
+    border-color: var(--gs-primary);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: var(--gs-card-shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--gs-white);
+    border-bottom: 1px solid var(--gs-border-color);
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-header.bg-primary {
+    background-color: var(--gs-primary) !important;
+    color: white;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Formulários */
+.form-control {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gs-border-color);
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: var(--gs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--gs-text-primary);
+}
+
+/* Alertas */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.alert-success {
+    background-color: rgba(5, 150, 105, 0.1);
+    color: var(--gs-success);
+}
+
+.alert-danger {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--gs-danger);
+}
+
+.alert-warning {
+    background-color: rgba(251, 191, 36, 0.1);
+    color: var(--gs-warning);
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--gs-info);
+}
+
+/* Footer */
+footer {
+    background-color: var(--gs-white);
+    color: var(--gs-text-secondary);
+    border-top: 1px solid var(--gs-border-color);
+}
+
+footer h5, footer h6 {
+    color: var(--gs-text-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+footer a {
+    color: var(--gs-text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: var(--gs-primary);
+}
+
+/* Social links */
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--gs-light);
+    color: var(--gs-medium);
+    transition: all 0.2s;
+}
+
+.social-links a:hover {
+    background-color: var(--gs-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Language Selector */
+.language-selector {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.5rem;
+    background-color: var(--gs-light);
+    color: var(--gs-text-primary);
+    font-weight: 500;
+    border: none;
+}
+
+.language-selector:hover {
+    background-color: var(--gs-border-color);
+}
+
+.dropdown-item .fi {
+    margin-right: 0.5rem;
+}
+
+/* Badge de idioma */
+.lang-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    background-color: var(--gs-light);
+    color: var(--gs-text-primary);
+}
+
+.lang-badge .fi {
+    margin-right: 0.3rem;
+}
+
+/* Calendário */
+.fc {
+    font-family: inherit;
+}
+
+.fc-button {
+    font-weight: 500 !important;
+    border-radius: 0.5rem !important;
+}
+
+.fc-button-primary {
+    background-color: var(--gs-primary) !important;
+    border-color: var(--gs-primary) !important;
+}
+
+.fc-button-primary:hover {
+    background-color: var(--gs-primary-hover) !important;
+    border-color: var(--gs-primary-hover) !important;
+}
+
+.fc-daygrid-day {
+    transition: background-color 0.2s;
+}
+
+.fc-daygrid-day:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+}
+
+.fc-day-today {
+    background-color: rgba(79, 70, 229, 0.1) !important;
+}
+
+/* Animações */
+.fade-in {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Tema alternador */
+#theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    color: var(--gs-text-primary);
+    background-color: var(--gs-light);
+}
+
+#theme-toggle:hover {
+    background-color: var(--gs-border-color);
+}
+
+/* Ícones de tema */
+.theme-light .theme-icon-light {
+    display: none;
+}
+
+.theme-light .theme-icon-dark {
+    display: inline-block;
+}
+
+.theme-dark .theme-icon-light {
+    display: inline-block;
+}
+
+.theme-dark .theme-icon-dark {
+    display: none;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .navbar {
+        padding: 0.5rem 0;
+    }
+}

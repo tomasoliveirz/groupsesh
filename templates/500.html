@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Erro no Servidor - Sistema de Agendamento{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center py-5">
+        <h1 class="display-1">500</h1>
+        <h2 class="mb-4">Erro no Servidor</h2>
+        <p class="lead mb-5">Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Voltar para a página inicial</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Sobre') }}{% endblock %}
+
+{% block content %}
+<section class="about-header text-center my-4 py-4">
+    <h1 class="display-4 fw-bold mb-4">{{ _('Sobre GroupSesh') }}</h1>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <p class="lead">{{ _('Uma solução simples para um problema complexo: coordenar quando todos podem se reunir.') }}</p>
+        </div>
+    </div>
+</section>
+
+<section class="about-story my-5">
+    <div class="row">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4">{{ _('Nossa História') }}</h2>
+                    <p>{{ _('GroupSesh nasceu da frustração de tentar coordenar reuniões com pessoas em diferentes zonas horárias e com agendas ocupadas.') }}</p>
+                    <p>{{ _('Após perder incontáveis horas em trocas de e-mails e mensagens tentando encontrar um horário que funcionasse para todos, Tomás Oliveira decidiu criar uma solução simples e elegante para este problema comum.') }}</p>
+                    <p>{{ _('Lançado em 2025, o GroupSesh rapidamente se tornou uma ferramenta essencial para equipes remotas, grupos de estudantes, famílias e qualquer pessoa que precise coordenar horários entre várias pessoas.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4">{{ _('Nossa Missão') }}</h2>
+                    <p>{{ _('No GroupSesh, acreditamos que coordenar disponibilidades não deveria ser complicado. Nossa missão é simplificar o processo de agendamento em grupo, economizando tempo e reduzindo a frustração.') }}</p>
+                    <p>{{ _('Construímos nossa plataforma com foco em:') }}</p>
+                    <ul>
+                        <li>{{ _('Simplicidade - interfaces intuitivas que qualquer pessoa pode usar') }}</li>
+                        <li>{{ _('Acessibilidade - suporte multilíngue e design responsivo') }}</li>
+                        <li>{{ _('Privacidade - apenas as informações necessárias são coletadas') }}</li>
+                        <li>{{ _('Eficiência - economize tempo com visualizações claras das disponibilidades') }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-creator my-5 py-4">
+    <div class="card">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-4 mb-lg-0 text-center">
+                    <img src="{{ url_for('static', filename='img/creator.jpg') }}" alt="Tomás Oliveira" class="creator-image rounded-circle img-fluid mb-3" style="max-width: 200px;">
+                    <h3>Tomás Oliveira</h3>
+                    <p class="text-muted mb-3">{{ _('Desenvolvedor & Fundador') }}</p>
+                    <div class="creator-social">
+                        <a href="https://github.com/tomasoliveirz" target="_blank" rel="noopener" class="me-2">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://linkedin.com/in/tomasoliveirz" target="_blank" rel="noopener" class="me-2">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="https://tomasoliveirz.github.io" target="_blank" rel="noopener">
+                            <i class="bi bi-globe"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-8">
+                    <h2 class="mb-4">{{ _('Conheça o Criador') }}</h2>
+                    <p>{{ _('Olá! Sou Tomás Oliveira, desenvolvedor fullstack e criador do GroupSesh. Minha jornada no desenvolvimento web começou há mais de uma década, com foco em criar soluções que resolvam problemas reais do dia-a-dia.') }}</p>
+                    <p>{{ _('Especializado em Python, JavaScript e tecnologias web modernas, tenho trabalhado com equipes remotas em diversos projetos, o que me fez experimentar em primeira mão as dificuldades de coordenar horários entre pessoas em diferentes fusos horários.') }}</p>
+                    <p>{{ _('GroupSesh é resultado de minha paixão por simplificar processos complexos e tornar a tecnologia mais acessível e útil para todos. Quando não estou codando, gosto de explorar novas tecnologias, contribuir para projetos open source e ajudar desenvolvedores iniciantes.') }}</p>
+                    <div class="mt-4">
+                        <a href="https://tomasoliveirz.github.io" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                            {{ _('Visite meu portfolio') }} <i class="bi bi-box-arrow-up-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features-section my-5 py-4">
+    <h2 class="text-center mb-5">{{ _('Características e Tecnologias') }}</h2>
+    
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 tech-card">
+                <div class="card-body text-center p-4">
+                    <div class="tech-icon mb-3">
+                        <i class="bi bi-globe2"></i>
+                    </div>
+                    <h3 class="h5 mb-3">{{ _('Multilíngue') }}</h3>
+                    <p class="mb-0">{{ _('Disponível em 7 idiomas: Português (PT/BR), Inglês, Espanhol, Alemão, Francês e Italiano.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 tech-card">
+                <div class="card-body text-center p-4">
+                    <div class="tech-icon mb-3">
+                        <i class="bi bi-moon-stars"></i>
+                    </div>
+                    <h3 class="h5 mb-3">{{ _('Modo Escuro') }}</h3>
+                    <p class="mb-0">{{ _('Interface adaptável com temas claro e escuro para melhor experiência visual.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 tech-card">
+                <div class="card-body text-center p-4">
+                    <div class="tech-icon mb-3">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h3 class="h5 mb-3">{{ _('Responsivo') }}</h3>
+                    <p class="mb-0">{{ _('Design adaptável que funciona perfeitamente em dispositivos móveis e desktops.') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 tech-card">
+                <div class="card-body text-center p-4">
+                    <div class="tech-icon mb-3">
+                        <i class="bi bi-code-slash"></i>
+                    </div>
+                    <h3 class="h5 mb-3">{{ _('Tecnologias') }}</h3>
+                    <p class="mb-0">{{ _('Construído com Python (Flask), SQLite, FullCalendar, Bootstrap e muito mais.') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="contact-section text-center my-5 py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="mb-4">{{ _('Entre em Contato') }}</h2>
+            <p class="mb-4">{{ _('Tem perguntas, sugestões ou feedback? Entre em contato através das redes sociais ou visite meu site pessoal.') }}</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="https://github.com/tomasoliveirz" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                    <i class="bi bi-github me-2"></i>GitHub
+                </a>
+                <a href="https://linkedin.com/in/tomasoliveirz" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                    <i class="bi bi-linkedin me-2"></i>LinkedIn
+                </a>
+                <a href="https://tomasoliveirz.github.io" target="_blank" rel="noopener" class="btn btn-outline-primary">
+                    <i class="bi bi-globe me-2"></i>Website
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

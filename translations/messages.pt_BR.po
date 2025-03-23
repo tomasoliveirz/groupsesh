@@ -1,0 +1,171 @@
+# Brazilian Portuguese translations for GroupSesh.
+# Copyright (C) 2025 GroupSesh
+# This file is distributed under the same license as the GroupSesh project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GroupSesh 1.0\n"
+"Report-Msgid-Bugs-To: info@groupsesh.com\n"
+"POT-Creation-Date: 2025-03-23 18:14+0000\n"
+"PO-Revision-Date: 2025-03-23 18:14+0000\n"
+"Last-Translator: Tomás Oliveira <tomas@groupsesh.com>\n"
+"Language-Team: Portuguese Brazil\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# General
+msgid "Coordenação de Disponibilidade Simplificada"
+msgstr "Coordenação de Disponibilidade Simplificada"
+
+msgid "Início"
+msgstr "Início"
+
+msgid "Criar Sondagem"
+msgstr "Criar Sondagem"
+
+msgid "Sobre"
+msgstr "Sobre"
+
+msgid "Links Úteis"
+msgstr "Links Úteis"
+
+msgid "Conecte-se"
+msgstr "Conecte-se"
+
+msgid "Coordenação de disponibilidade simplificada."
+msgstr "Coordenação de disponibilidade simplificada."
+
+# Homepage
+msgid "Coordene disponibilidades com facilidade"
+msgstr "Coordene disponibilidades com facilidade"
+
+msgid "GroupSesh simplifica o planejamento de eventos ao reunir as disponibilidades de todos os participantes em um único lugar."
+msgstr "GroupSesh simplifica o planejamento de eventos ao reunir as disponibilidades de todos os participantes em um único lugar."
+
+msgid "Saiba Mais"
+msgstr "Saiba Mais"
+
+msgid "Tem um link de sondagem?"
+msgstr "Tem um link de sondagem?"
+
+msgid "Cole o link da sondagem que você recebeu para participar."
+msgstr "Cole o link da sondagem que você recebeu para participar."
+
+msgid "Cole o link da sondagem aqui"
+msgstr "Cole o link da sondagem aqui"
+
+msgid "Acessar"
+msgstr "Acessar"
+
+msgid "Como Funciona"
+msgstr "Como Funciona"
+
+msgid "GroupSesh torna simples coordenar horários entre várias pessoas."
+msgstr "GroupSesh torna simples coordenar horários entre várias pessoas."
+
+msgid "Crie uma Sondagem"
+msgstr "Crie uma Sondagem"
+
+msgid "Preencha um formulário simples e obtenha um link único para compartilhar com os participantes."
+msgstr "Preencha um formulário simples e obtenha um link único para compartilhar com os participantes."
+
+msgid "Compartilhe o Link"
+msgstr "Compartilhe o Link"
+
+msgid "Envie o link para todos os participantes indicarem suas disponibilidades no calendário."
+msgstr "Envie o link para todos os participantes indicarem suas disponibilidades no calendário."
+
+msgid "Visualize Resultados"
+msgstr "Visualize Resultados"
+
+msgid "Acesse o dashboard para ver todas as disponibilidades e escolha a melhor data para todos."
+msgstr "Acesse o dashboard para ver todas as disponibilidades e escolha a melhor data para todos."
+
+msgid "Por que escolher GroupSesh?"
+msgstr "Por que escolher GroupSesh?"
+
+msgid "Economize Tempo"
+msgstr "Economize Tempo"
+
+msgid "Esqueça as trocas intermináveis de mensagens. Coordene disponibilidades em um único lugar."
+msgstr "Esqueça as trocas intermináveis de mensagens. Coordene disponibilidades em um único lugar."
+
+msgid "Suporte Multilíngue"
+msgstr "Suporte Multilíngue"
+
+msgid "Disponível em vários idiomas para facilitar a coordenação com equipes globais."
+msgstr "Disponível em vários idiomas para facilitar a coordenação com equipes globais."
+
+msgid "Simples e Seguro"
+msgstr "Simples e Seguro"
+
+msgid "Sem necessidade de criar conta. Links seguros e interface intuitiva."
+msgstr "Sem necessidade de criar conta. Links seguros e interface intuitiva."
+
+msgid "Preview do Dashboard"
+msgstr "Preview do Dashboard"
+
+msgid "Pronto para coordenar sua próxima reunião?"
+msgstr "Pronto para coordenar sua próxima reunião?"
+
+msgid "Crie uma sondagem gratuitamente e compartilhe com sua equipe em segundos."
+msgstr "Crie uma sondagem gratuitamente e compartilhe com sua equipe em segundos."
+
+msgid "Começar Agora"
+msgstr "Começar Agora"
+
+msgid "Link inválido. Por favor, verifique e tente novamente."
+msgstr "Link inválido. Por favor, verifique e tente novamente."
+
+# Error pages
+msgid "Página não encontrada"
+msgstr "Página não encontrada"
+
+msgid "A página que você está procurando não existe ou foi removida."
+msgstr "A página que você está procurando não existe ou foi removida."
+
+msgid "Voltar para a página inicial"
+msgstr "Voltar para a página inicial"
+
+msgid "Voltar"
+msgstr "Voltar"
+
+msgid "Erro no Servidor"
+msgstr "Erro no Servidor"
+
+msgid "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde."
+msgstr "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde."
+
+# API Messages
+msgid "Survey não encontrada"
+msgstr "Sondagem não encontrada"
+
+msgid "Survey não encontrada ou expirada"
+msgstr "Sondagem não encontrada ou expirada"
+
+msgid "Survey expirada"
+msgstr "Sondagem expirada"
+
+msgid "Campo obrigatório ausente: {}"
+msgstr "Campo obrigatório ausente: {}"
+
+msgid "E-mail inválido"
+msgstr "E-mail inválido"
+
+msgid "Survey criada com sucesso"
+msgstr "Sondagem criada com sucesso"
+
+msgid "Erro ao criar survey"
+msgstr "Erro ao criar sondagem"
+
+msgid "Formato de datas inválido"
+msgstr "Formato de datas inválido"
+
+msgid "Disponibilidade registrada com sucesso"
+msgstr "Disponibilidade registrada com sucesso"
+
+msgid "Erro ao registrar disponibilidade"
+msgstr "Erro ao registrar disponibilidade"

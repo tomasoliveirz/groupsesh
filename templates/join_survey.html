@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Participar da Survey - {{ survey.title }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/calendar.css') }}" rel="stylesheet">
+<style>
+    .fc-day-future {
+        cursor: pointer;
+    }
+    .fc-day-selected {
+        background-color: rgba(0, 123, 255, 0.25) !important;
+    }
+    .fc-day-past {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+    }
+    #selected-days-counter {
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">{{ survey.title }}</h2>
+            </div>
+            <div class="card-body">
+                {% if survey.description %}
+                <div class="alert alert-light">
+                    {{ survey.description }}
+                </div>
+                {% endif %}
+                
+                <div id="participation-form">
+                    <h4 class="mb-3">Indique sua disponibilidade</h4>
+                    <p class="text-muted">
+                        Olá! Por favor, informe seus dados e selecione os dias em que você está disponível no calendário abaixo.
+                        <span class="text-danger">*</span> Campos obrigatórios
+                    </p>
+                    
+                    <form id="join-survey-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Nome <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                                <div class="invalid-feedback">Por favor, insira seu nome.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">E-mail <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback">Por favor, insira um e-mail válido.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Selecione os dias em que você está disponível <span class="text-danger">*</span></label>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill"></i> 
+                                Clique nos dias em que você está disponível no calendário abaixo.
+                                <div class="mt-1">
+                                    <strong>Dias selecionados:</strong> <span id="selected-days-counter">0</span>
+                                </div>
+                            </div>
+                            
+                            <div id="calendar" class="mb-3"></div>
+                            <input type="hidden" id="selected-dates" name="selected-dates" required>
+                            <div class="invalid-feedback" id="calendar-feedback">
+                                Por favor, selecione pelo menos um dia.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
+                                Enviar Disponibilidade
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Mensagem de sucesso (inicialmente oculta) -->
+                <div id="success-message" class="d-none">
+                    <div class="text-center py-5">
+                        <div class="display-1 text-success mb-4">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h2 class="mb-3">Obrigado pela sua resposta!</h2>
+                        <p class="lead">
+                            Sua disponibilidade foi registrada com sucesso.
+                        </p>
+                        <div class="mt-4">
+                            <a href="javascript:location.reload()" class="btn btn-outline-primary">
+                                Enviar nova resposta
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('join-survey-form');
+        const submitButton = document.getElementById('submit-button');
+        const participationForm = document.getElementById('participation-form');
+        const successMessage = document.getElementById('success-message');
+        const selectedDatesInput = document.getElementById('selected-dates');
+        const selectedDaysCounter = document.getElementById('selected-days-counter');
+        
+        // Conjunto para armazenar as datas selecionadas
+        const selectedDates = new Set();
+        
+        // Inicializar calendário
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridYear'
+            },
+            views: {
+                dayGridMonth: {
+                    buttonText: 'Mês'
+                },
+                dayGridYear: {
+                    buttonText: 'Ano',
+                    duration: { years: 1 }
+                }
+            },
+            locale: 'pt-br',
+            height: 'auto',
+            selectable: false,
+            dateClick: function(info) {
+                const dateStr = info.dateStr;
+                const dayEl = info.dayEl;
+                
+                // Ignorar datas passadas
+                if (info.date < new Date().setHours(0, 0, 0, 0)) {
+                    return;
+                }
+                
+                // Toggle seleção
+                if (selectedDates.has(dateStr)) {
+                    selectedDates.delete(dateStr);
+                    dayEl.classList.remove('fc-day-selected');
+                } else {
+                    selectedDates.add(dateStr);
+                    dayEl.classList.add('fc-day-selected');
+                }
+                
+                // Atualizar contador e input oculto
+                selectedDaysCounter.textContent = selectedDates.size;
+                selectedDatesInput.value = Array.from(selectedDates).join(',');
+                
+                // Validação visual
+                if (selectedDates.size > 0) {
+                    document.getElementById('calendar-feedback').style.display = 'none';
+                }
+            }
+        });
+        
+        calendar.render();
+        
+        // Função para validar o formulário
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            // Validação do e-mail
+            const emailField = document.getElementById('email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailField.value && !emailRegex.test(emailField.value)) {
+                emailField.classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            // Validação das datas selecionadas
+            if (selectedDates.size === 0) {
+                document.getElementById('calendar-feedback').style.display = 'block';
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        // Handler de envio do formulário
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Desabilitar botão e mostrar loading
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...';
+            
+            // Preparar dados
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                availability_dates: Array.from(selectedDates)
+            };
+            
+            try {
+                // Enviar requisição
+                const response = await fetch('/api/join-survey/{{ survey.token }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                // Processar resposta
+                if (response.ok) {
+                    // Mostrar mensagem de sucesso
+                    participationForm.classList.add('d-none');
+                    successMessage.classList.remove('d-none');
+                } else {
+                    // Erro na API
+                    const errorData = await response.json();
+                    alert(`Erro ao registrar disponibilidade: ${errorData.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao comunicar com o servidor. Por favor, tente novamente.');
+            } finally {
+                // Restaurar botão
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Enviar Disponibilidade';
+            }
+        });
+        
+        // Verificar se já respondeu antes (usando localStorage)
+        const storedEmail = localStorage.getItem('survey_{{ survey.token }}_email');
+        const storedName = localStorage.getItem('survey_{{ survey.token }}_name');
+        
+        if (storedEmail && storedName) {
+            document.getElementById('email').value = storedEmail;
+            document.getElementById('name').value = storedName;
+        }
+    });
+</script>
+{% endblock %}
