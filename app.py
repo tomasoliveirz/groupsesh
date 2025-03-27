@@ -10,7 +10,8 @@ import base64
 from werkzeug.security import generate_password_hash, check_password_hash
 from translations.config import init_babel, LANGUAGES, DEFAULT_LANGUAGE, _, _l
 from flask_babel import lazy_gettext as _l
-from config import Config
+from config import selected_config as Config
+from flask_login import current_user
 
 # Initialize application with absolute path to instance
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -23,7 +24,7 @@ app = Flask(__name__,
 # Apply configurations from Config object
 app.config.from_object(Config)
 
-# Configuração de logging - Corrigido para acessar app.config em vez de Config diretamente
+# Configuração de logging
 logging.basicConfig(
     level=logging.DEBUG if app.config.get('DEBUG', False) else logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -49,10 +50,14 @@ babel = init_babel(app)
 
 # Now import database modules
 from database import db, init_app
-from database.models import Survey, Participant, Availability
+from database.models import Survey, Participant, Availability, User
 
 # Initialize database
 init_app(app)
+
+# Initialize authentication
+from auth import init_app as init_auth
+init_auth(app)
 
 # Middleware to process language prefix in URL
 @app.url_value_preprocessor
@@ -66,8 +71,12 @@ def pull_lang_code(endpoint, values):
 def set_language_code(endpoint, values):
     if 'lang_code' in values or not g.get('lang_code', None):
         return
-    if app.url_map.is_endpoint_expecting(endpoint, 'lang_code'):
-        values['lang_code'] = g.lang_code
+    try:
+        if app.url_map.is_endpoint_expecting(endpoint, 'lang_code'):
+            values['lang_code'] = g.lang_code
+    except KeyError:
+        # Se o endpoint não existe no mapa, simplesmente ignoramos
+        pass
 
 # Redirect to URL with language
 @app.route('/')
@@ -127,6 +136,34 @@ def about_page():
     """Página sobre"""
     return render_template('about.html')
 
+@app.route('/<lang_code>/profile')
+@app.route('/<lang_code>/account')
+def profile_page():
+    """Página de perfil do usuário"""
+    if not current_user.is_authenticated:
+        flash(_('Você precisa estar logado para acessar esta página'), 'warning')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('profile.html')
+
+
+
+# Adicionar em app.py dentro da função context_processor
+@app.context_processor
+def utility_processor():
+    def get_current_year():
+        return datetime.now().year
+    
+    # Adicionar variável para verificar se o Google OAuth está habilitado
+    from auth.oauth import google_enabled
+    
+    return dict(
+        current_year=get_current_year,
+        google_oauth_enabled=google_enabled,
+        languages=LANGUAGES
+    )
+
+
 # API endpoints
 @app.route('/api/create-survey', methods=['POST'])
 def create_survey():
@@ -151,12 +188,16 @@ def create_survey():
     
     # Criar survey
     try:
+        # Verificar se o usuário atual está logado
+        creator_id = current_user.id if current_user.is_authenticated else None
+        
         survey = Survey(
             title=data['title'],
             description=data.get('description', ''),
             admin_email=email,
             admin_name=data['admin_name'],
-            expires_at=expires_at
+            expires_at=expires_at,
+            creator_id=creator_id
         )
         
         db.session.add(survey)
@@ -164,9 +205,6 @@ def create_survey():
         
         # Obter o código de idioma atual
         lang_code = g.get('lang_code', DEFAULT_LANGUAGE)
-        
-        # NOTA: Não criamos automaticamente a participação do admin aqui
-        # Isso será feito separadamente logo após o registro da survey
         
         return jsonify({
             'message': _('Survey criada com sucesso'),
@@ -207,6 +245,9 @@ def join_survey(token):
     # Verificar se é o administrador da survey
     is_admin = (email == survey.admin_email.lower())
     
+    # Verificar se o usuário atual está logado
+    user_id = current_user.id if current_user.is_authenticated else None
+    
     # Verificar se o usuário já respondeu
     existing_participant = Participant.get_by_survey_and_email(survey.id, email)
     
@@ -215,7 +256,7 @@ def join_survey(token):
         if existing_participant:
             # Se já respondeu, atualizar os dados
             existing_participant.name = data['name']
-            # Nota: o campo updated_at será automaticamente atualizado se existir no modelo
+            existing_participant.user_id = user_id
             
             # Remover disponibilidades antigas
             Availability.query.filter_by(participant_id=existing_participant.id).delete()
@@ -228,7 +269,8 @@ def join_survey(token):
                 survey_id=survey.id,
                 name=data['name'],
                 email=email,
-                is_admin=is_admin
+                is_admin=is_admin,
+                user_id=user_id
             )
             db.session.add(participant)
             db.session.flush()  # Para obter o ID gerado
@@ -440,6 +482,19 @@ def get_survey_data(token):
         'is_expired': survey.is_expired,
         'stats': stats
     }), 200
+
+@app.route('/api/user-info', methods=['GET'])
+def get_user_info():
+    """Retorna informações sobre o usuário atual (se autenticado)"""
+    if current_user.is_authenticated:
+        return jsonify({
+            'authenticated': True,
+            'user': current_user.to_dict()
+        }), 200
+    else:
+        return jsonify({
+            'authenticated': False
+        }), 200
 
 def generate_admin_token(survey_id, email):
     """Gera um token temporário para autenticação do admin"""

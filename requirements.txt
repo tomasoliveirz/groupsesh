@@ -1,20 +1,28 @@
-# Dependências principais do Flask
+# ---- Flask e extensões principais ----
 Flask==2.3.2
 Flask-WTF==1.1.1
+Flask-SQLAlchemy==3.0.5
+Flask-Login==0.6.2
+flask-cors==4.0.0
+Flask-Babel==3.1.0
+
+# ---- Biblioteca para validação de email ----
 email-validator==2.0.0
+
+# ---- Outras dependências do Flask e WSGI ----
 python-dotenv==1.0.0
 Werkzeug==2.3.6
-Flask-SQLAlchemy==3.0.5
 itsdangerous==2.1.2
-flask-cors==4.0.0
+gunicorn==21.2.0
 
-# Internacionalização
-Flask-Babel==3.1.0
-Babel==2.12.1
-
-# Segurança
+# ---- Segurança e criptografia ----
 Flask-Talisman==1.0.0
 pyOpenSSL==23.2.0
 
-# Servidor WSGI para produção
-gunicorn==21.2.0
+# ---- Internacionalização ----
+Babel==2.12.1
+
+# ---- OAuth / Login Social (Google) ----
+requests==2.28.2
+oauthlib==3.2.2
+requests-oauthlib==1.3.1
