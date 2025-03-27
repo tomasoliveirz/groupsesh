@@ -62,7 +62,7 @@
             <div class="card-body">
                 {% include 'auth/partials/auth_messages.html' %}
                 
-                <form id="profile-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                <form id="profile-form" method="POST" action="{{ url_for('profile_bp.profile', lang_code=language_code) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <div class="mb-3">

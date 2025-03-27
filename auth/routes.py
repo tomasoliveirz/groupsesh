@@ -121,7 +121,7 @@ def login():
         return redirect(url_for('index', lang_code=g.lang_code))
     
     if request.method == 'POST':
-        # Verificamos se é uma requisição AJAX ou formulário tradicional
+        # Verificar se é uma requisição AJAX ou formulário tradicional
         if request.is_json:
             # ----- FLUXO AJAX -----
             data = request.get_json() or {}
@@ -139,8 +139,10 @@ def login():
             if not user or not user.check_password(password):
                 return jsonify({'error': _('Email ou senha incorretos.')}), 401
                 
+            # [MODIFICADO] Remover bloqueio por verificação, mas manter aviso
             if not user.is_verified:
-                return jsonify({'error': _('Conta não verificada. Por favor, verifique seu email.')}), 401
+                # Apenas registrar aviso sobre verificação pendente
+                current_app.logger.info(f"Login com email não verificado: {email}")
                 
             # Login bem-sucedido
             login_user(user, remember=remember)
@@ -148,7 +150,8 @@ def login():
             # Retornar dados do usuário
             return jsonify({
                 'message': _('Login realizado com sucesso.'),
-                'user': user.to_dict()
+                'user': user.to_dict(),
+                'verified': user.is_verified  # Informar status de verificação
             }), 200
             
         else:
@@ -166,9 +169,9 @@ def login():
             
             # Verificar existência do usuário e a senha
             if user and user.check_password(password):
+                # [MODIFICADO] Remover bloqueio por verificação, mas manter aviso
                 if not user.is_verified:
-                    flash(_('Por favor, verifique seu email para ativar sua conta.'), 'warning')
-                    return render_template('auth/login.html')
+                    flash(_('Sua conta não está verificada. Algumas funcionalidades podem ser limitadas.'), 'warning')
                 
                 login_user(user, remember=remember)
                 
@@ -182,8 +185,6 @@ def login():
     
     # Se for GET, exibe o formulário
     return render_template('auth/login.html')
-
-
 @auth_bp.route('/logout')
 def logout():
     """Rota para logout de usuários."""

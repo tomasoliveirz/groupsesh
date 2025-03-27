@@ -1,3 +1,4 @@
+# No início do arquivo app.py (linha 11), adicione/modifique a importação:
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, abort, session, g
 from flask_wtf.csrf import CSRFProtect
 from flask_cors import CORS
@@ -11,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from translations.config import init_babel, LANGUAGES, DEFAULT_LANGUAGE, _, _l
 from flask_babel import lazy_gettext as _l
 from config import selected_config as Config
-from flask_login import current_user
+from flask_login import current_user, login_required  # Adicione login_required aqui
 
 # Initialize application with absolute path to instance
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -58,7 +59,8 @@ init_app(app)
 # Initialize authentication
 from auth import init_app as init_auth
 init_auth(app)
-
+from profiles import profile_bp
+app.register_blueprint(profile_bp)
 # Middleware to process language prefix in URL
 @app.url_value_preprocessor
 def pull_lang_code(endpoint, values):
@@ -92,11 +94,6 @@ def index():
     """Página inicial"""
     return render_template('index.html')
 
-@app.route('/<lang_code>/create-survey')
-def create_survey_page():
-    """Página de criação de survey"""
-    return render_template('create_survey.html')
-
 @app.route('/<lang_code>/survey/<token>')
 def join_survey_page(token):
     """Página de participação na survey"""
@@ -110,7 +107,6 @@ def join_survey_page(token):
     
     # Sempre permitimos visualizar a survey, mesmo se expirada
     return render_template('join_survey.html', survey=survey)
-
 @app.route('/<lang_code>/dashboard/<token>')
 def dashboard_page(token):
     """Dashboard do administrador"""
@@ -119,32 +115,32 @@ def dashboard_page(token):
         flash(_('Survey não encontrada'), 'error')
         return redirect(url_for('index', lang_code=g.lang_code))
     
-    # Verificar se está expirada, mas ainda mostrar o dashboard com aviso
+    # Verificar propriedade
+    is_owner = False
+    if current_user.is_authenticated:
+        is_owner = (survey.creator_id == current_user.id or 
+                   survey.admin_email.lower() == current_user.email.lower())
+    
+    # Se não for o proprietário, verificar via método alternativo
+    if not is_owner and not session.get(f'admin_verified_{token}', False):
+        return redirect(url_for('verify_admin_page', token=token, lang_code=g.lang_code))
+    
+    # Verificar se está expirada
     is_expired = survey.is_expired
     
-    # Importante: Passar explicitamente o language_code para o template
+    # Passar parâmetros para o template
     language_code = g.lang_code
     
     return render_template('dashboard.html', 
                           survey=survey, 
-                          is_expired=is_expired, 
+                          is_expired=is_expired,
+                          is_owner=is_owner,
                           language_code=language_code)
-
 
 @app.route('/<lang_code>/about')
 def about_page():
     """Página sobre"""
     return render_template('about.html')
-
-@app.route('/<lang_code>/profile')
-@app.route('/<lang_code>/account')
-def profile_page():
-    """Página de perfil do usuário"""
-    if not current_user.is_authenticated:
-        flash(_('Você precisa estar logado para acessar esta página'), 'warning')
-        return redirect(url_for('auth.login'))
-    
-    return render_template('profile.html')
 
 
 
@@ -163,47 +159,52 @@ def utility_processor():
         languages=LANGUAGES
     )
 
+# Modificar em app.py
+from flask_login import login_required, current_user
 
-# API endpoints
+
+# MANTER APENAS ESTA VERSÃO
+@app.route('/<lang_code>/create-survey')
+@login_required
+def create_survey_page():
+    """Página de criação de survey"""
+    return render_template('create_survey.html')
+
 @app.route('/api/create-survey', methods=['POST'])
+@login_required
 def create_survey():
-    """Cria uma nova survey"""
+    """Cria uma nova survey usando os dados do usuário autenticado"""
     data = request.json
     
-    # Validação básica
-    required_fields = ['title', 'admin_email', 'admin_name']
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return jsonify({'error': _('Campo obrigatório ausente: {}').format(field)}), 400
+    # Validação básica (apenas título é obrigatório)
+    if not data.get('title'):
+        return jsonify({'error': _('O título da pesquisa é obrigatório')}), 400
     
-    # Normalizar email (converter para minúsculas)
-    email = data['admin_email'].lower().strip()
+    # Ignorar o email fornecido no formulário, usar SEMPRE o email do usuário logado
+    # Isso evita problemas de segurança onde um usuário poderia tentar criar surveys como outro
+    admin_email = current_user.email.lower().strip()
     
-    # Validar formato de e-mail (básico)
-    if '@' not in email or '.' not in email:
-        return jsonify({'error': _('E-mail inválido')}), 400
+    # Usar o nome fornecido ou o nome do usuário como fallback
+    admin_name = data.get('admin_name', '').strip() or current_user.name
     
     # Calcular data de expiração
     expires_at = datetime.utcnow() + timedelta(days=app.config['SURVEY_LINK_EXPIRY'])
     
     # Criar survey
     try:
-        # Verificar se o usuário atual está logado
-        creator_id = current_user.id if current_user.is_authenticated else None
-        
         survey = Survey(
             title=data['title'],
             description=data.get('description', ''),
-            admin_email=email,
-            admin_name=data['admin_name'],
+            admin_email=admin_email,  # Sempre usar o email do usuário logado
+            admin_name=admin_name,
             expires_at=expires_at,
-            creator_id=creator_id
+            creator_id=current_user.id  # Associar ao usuário atual
         )
         
         db.session.add(survey)
         db.session.commit()
         
-        # Obter o código de idioma atual
+        # Código para resposta permanece igual
         lang_code = g.get('lang_code', DEFAULT_LANGUAGE)
         
         return jsonify({
@@ -217,9 +218,8 @@ def create_survey():
         db.session.rollback()
         logger.error(f"Erro ao criar survey: {str(e)}", exc_info=True)
         return jsonify({'error': _('Erro ao criar survey')}), 500
-
-
-
+    
+    
 
 @app.route('/api/join-survey/<token>', methods=['POST'])
 def join_survey(token):
@@ -381,43 +381,31 @@ def date_format_filter(date_input, include_time=True):
         return str(date_input)
     
     
-@app.route('/api/verify-admin', methods=['POST'])
-def verify_admin():
-    """Verifica se o email fornecido é o administrador de uma survey"""
-    data = request.json
-    
-    if not data or 'token' not in data or 'email' not in data:
-        return jsonify({'error': _('Parâmetros insuficientes')}), 400
-    
-    token = data['token']
-    email = data['email'].lower().strip()
-    
-    # Buscar a survey
+@app.route('/<lang_code>/verify-admin/<token>', methods=['GET', 'POST'])
+def verify_admin_page(token):
+    """Página para verificar se o usuário é o administrador da survey"""
     survey = Survey.get_by_token(token)
     if not survey:
-        return jsonify({'error': _('Survey não encontrada')}), 404
+        flash(_('Survey não encontrada'), 'error')
+        return redirect(url_for('index', lang_code=g.lang_code))
     
-    # Verificar se o email corresponde ao admin
-    is_admin = (email == survey.admin_email.lower())
+    # Se já está autenticado e é o proprietário, redireciona para o dashboard
+    if current_user.is_authenticated:
+        if survey.creator_id == current_user.id or survey.admin_email.lower() == current_user.email.lower():
+            return redirect(url_for('dashboard_page', token=token, lang_code=g.lang_code))
     
-    if is_admin:
-        # Gerar um token de autenticação temporário
-        admin_auth_token = generate_admin_token(survey.id, email)
+    if request.method == 'POST':
+        email = request.form.get('email', '').lower().strip()
         
-        # Salvar em session ou retornar para o cliente salvar em localStorage
-        session[f'admin_auth_{token}'] = admin_auth_token
-        
-        return jsonify({
-            'success': True,
-            'is_admin': True,
-            'admin_name': survey.admin_name,
-            'auth_token': admin_auth_token
-        }), 200
-    else:
-        return jsonify({
-            'success': True,
-            'is_admin': False
-        }), 200
+        # Verificar se o email corresponde ao admin
+        if email == survey.admin_email.lower():
+            # Marcar como verificado na sessão
+            session[f'admin_verified_{token}'] = True
+            return redirect(url_for('dashboard_page', token=token, lang_code=g.lang_code))
+        else:
+            flash(_('Email incorreto. Você precisa usar o email do administrador.'), 'danger')
+    
+    return render_template('verify_admin.html', survey=survey)
 
 @app.route('/api/survey-data/<token>', methods=['GET'])
 def get_survey_data(token):

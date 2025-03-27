@@ -44,20 +44,26 @@
                 </button>
                 
                 <div class="collapse navbar-collapse" id="navbarContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('index', lang_code=language_code) }}">{{ _('Home') }}</a>
+                            <a class="nav-link" href="{{ url_for('index', lang_code=g.lang_code) }}">
+                                {{ _('Home') }}
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('create_survey_page', lang_code=language_code) }}">{{ _('Create Survey') }}</a>
+                            <a class="nav-link" href="{{ url_for('create_survey_page', lang_code=g.lang_code) }}">
+                                {{ _('Create Survey') }}
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('about_page', lang_code=language_code) }}">{{ _('About') }}</a>
+                            <a class="nav-link" href="{{ url_for('about_page', lang_code=g.lang_code) }}">
+                                {{ _('About') }}
+                            </a>
                         </li>
                     </ul>
-                    
+                
                     <div class="d-flex align-items-center">
-                        <!-- Language Selector -->
+                        <!-- Language Selector - Mantido intacto -->
                         <div class="dropdown me-3">
                             <button class="btn btn-sm dropdown-toggle language-selector" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-globe2"></i>
@@ -76,46 +82,45 @@
                             </ul>
                         </div>
                         
-                        <!-- Theme Toggle -->
+                        <!-- Theme Toggle - Mantido intacto -->
                         <button id="theme-toggle" class="btn btn-sm me-3">
                             <i class="bi bi-moon-stars theme-icon-dark"></i>
                             <i class="bi bi-sun theme-icon-light"></i>
                         </button>
-
-                        <!-- Authentication Buttons (Only show when not logged in) -->
-                        {% if not current_user.is_authenticated %}
-                        <div class="auth-buttons">
-                            <button class="btn btn-sm btn-primary open-auth-modal me-2" data-auth-tab="login">
-                                {{ _('Login') }}
-                            </button>
-                            <button class="btn btn-sm btn-outline-primary open-auth-modal" data-auth-tab="register">
-                                {{ _('Register') }}
-                            </button>
-                        </div>
+                
+                        <!-- Controles de autenticação simplificados -->
+                        {% if current_user.is_authenticated %}
+                            <div class="dropdown user-dropdown">
+                                <button class="btn btn-sm dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% if current_user.profile_picture %}
+                                    <img src="{{ current_user.profile_picture }}" alt="{{ current_user.name }}" class="rounded-circle me-2 user-profile-pic" width="24" height="24">
+                                    {% else %}
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    {% endif %}
+                                    <span class="d-none d-md-inline-block user-name">{{ current_user.name }}</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{{ url_for('profile_bp.profile', lang_code=g.lang_code) }}">
+                                        <i class="bi bi-person me-2"></i>{{ _('My Profile') }}
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('profile_bp.my_surveys', lang_code=g.lang_code) }}">
+                                        <i class="bi bi-calendar-check me-2"></i>{{ _('My Surveys') }}
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2"></i>{{ _('Logout') }}
+                                    </a></li>
+                                </ul>
+                            </div>
                         {% else %}
-                        <!-- User Menu (Only show when logged in) -->
-                        <div class="dropdown user-dropdown">
-                            <button class="btn btn-sm dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {% if current_user.profile_picture %}
-                                <img src="{{ current_user.profile_picture }}" alt="{{ current_user.name }}" class="rounded-circle me-2 user-profile-pic" width="24" height="24">
-                                {% else %}
-                                <i class="bi bi-person-circle me-2"></i>
-                                {% endif %}
-                                <span class="d-none d-md-inline-block user-name">{{ current_user.name }}</span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('profile_page', lang_code=language_code) }}">
-                                    <i class="bi bi-person me-2"></i>{{ _('My Profile') }}
-                                </a></li>
-                                <li><a class="dropdown-item" href="#">
-                                    <i class="bi bi-calendar-check me-2"></i>{{ _('My Surveys') }}
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                    <i class="bi bi-box-arrow-right me-2"></i>{{ _('Logout') }}
-                                </a></li>
-                            </ul>
-                        </div>
+                            <div class="auth-buttons">
+                                <a href="{{ url_for('auth.login', lang_code=g.lang_code) }}" class="btn btn-sm btn-primary me-2">
+                                    {{ _('Login') }}
+                                </a>
+                                <a href="{{ url_for('auth.register', lang_code=g.lang_code) }}" class="btn btn-sm btn-outline-primary">
+                                    {{ _('Register') }}
+                                </a>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -232,10 +237,10 @@
             if (pathname.includes('/create-survey')) {
                 // Carregar scripts necessários programaticamente
                 const scripts = [
-                    '/static/js/common/validation.js',
-                    '/static/js/common/date-utils.js',
-                    '/static/js/common/ui-utils.js',
-                    '/static/js/common/api.js',
+                    '/static/js/utils/validation.js',
+                    '/static/js/utils/date-utils.js',
+                    '/static/js/utils/ui-utils.js',
+                    '/static/js/utils/api.js',
                     '/static/js/pages/create.js'
                 ];
                 
@@ -267,11 +272,8 @@
         }
     </script>
     
-    <!-- Authentication Manager Script -->
-    <script src="{{ url_for('static', filename='js/common/auth_manager.js') }}"></script>
-    
     <!-- Page transition script -->
-    <script src="{{ url_for('static', filename='js/page-transitions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

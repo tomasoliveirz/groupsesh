@@ -28,6 +28,11 @@
 
 
 {% block content %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>
+    {{ _('Você está logado como') }} <strong>{{ current_user.name }}</strong>.
+    {{ _('A pesquisa será criada com seu email') }} <strong>{{ current_user.email }}</strong>.
+</div>
 <div class="row justify-content-center">
     <div class="col-lg-10">
         <div class="card shadow">
@@ -56,49 +61,54 @@
                                   placeholder="{{ _('Briefly describe the purpose of this survey...') }}"></textarea>
                     </div>
                     
-                    <div class="row g-4">
-                        <div class="col-md-6 mb-3">
-                            <label for="admin_name" class="form-label">{{ _('Your Name') }} <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control" id="admin_name" name="admin_name" required
-                                       placeholder="{{ _('Organizer name') }}">
-                            </div>
-                            <div class="invalid-feedback">{{ _('Please enter your name.') }}</div>
+                    <!-- Campo de nome simplificado - permite edição do nome para esta survey específica -->
+                    <div class="mb-4">
+                        <label for="admin_name" class="form-label">{{ _('Your Display Name for this Survey') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control" id="admin_name" name="admin_name" required
+                                   value="{{ current_user.name }}" placeholder="{{ _('Organizer name') }}">
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="admin_email" class="form-label">{{ _('Your Email') }} <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="email" class="form-control" id="admin_email" name="admin_email" required
-                                       placeholder="{{ _('your@email.com') }}">
-                            </div>
-                            <div class="invalid-feedback">{{ _('Please enter a valid email.') }}</div>
-                        </div>
+                        <div class="form-text">{{ _('You can customize how your name appears to participants.') }}</div>
+                        <div class="invalid-feedback">{{ _('Please enter your name.') }}</div>
                     </div>
                     
-                    <!-- Bloco para seleção de disponibilidade -->
+                    <!-- Campo de email removido da UI, substituído por campo oculto -->
+                    <input type="hidden" id="admin_email" name="admin_email" value="{{ current_user.email }}">
+                    
+                    <!-- Seção de calendário já está presente, apenas integraremos melhor -->
                     <div class="mb-4">
-                        <label class="form-label">{{ _('Select your availability') }} <span class="text-danger">*</span></label>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle-fill"></i> 
-                            {{ _('Click on the days when you are available on the calendar below.') }}
-                            <div class="mt-1">
-                                <strong>{{ _('Selected days:') }}</strong> <span id="selected-days-counter">0</span>
+                        <div class="calendar-container">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h4>{{ _('Your Availability') }}</h4>
+                                
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="prev-month-btn">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="today-btn">
+                                        {{ _('Today') }}
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="next-month-btn">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div id="calendar" class="mb-3"></div>
-                        <input type="hidden" id="selected-dates" name="selected-dates" required>
-                        <div class="invalid-feedback" id="calendar-feedback">
-                            {{ _('Please select at least one day.') }}
+                            
+                            <div id="calendar"></div>
+                            
+                            <div class="mt-2">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    {{ _('Selected days:') }} <span id="selected-days-counter">0</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary btn-lg" id="submit-button">
-                            <i class="bi bi-calendar-check me-2"></i>{{ _('Create Survey') }}
+                            <i class="bi bi-calendar-check me-2"></i>{{ _('Create Survey and Share') }}
                         </button>
                     </div>
                 </form>
@@ -182,10 +192,10 @@
 
 {% block extra_js %}
 <!-- Módulos de utilitários -->
-<script src="{{ url_for('static', filename='js/common/validation.js') }}"></script>
-<script src="{{ url_for('static', filename='js/common/date-utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/common/ui-utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/common/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/validation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/date-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/ui-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/api.js') }}"></script>
 
 <!-- Ouvinte para evento de atualização de página -->
 <script>

@@ -1,5 +1,6 @@
 /**
  * app.js - Inicialização global da aplicação
+ * Ponto de entrada principal para funcionalidades compartilhadas
  */
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar tema
@@ -58,10 +59,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const mainContainer = document.querySelector('main');
         if (!mainContainer) return;
         
-        // Função global para copiar texto
+        // Função global para copiar texto mantida para compatibilidade
         window.copyToClipboard = function(elementId) {
-            UI.copyToClipboard(elementId);
+            if (window.DOMUtils && DOMUtils.copyToClipboard) {
+                return DOMUtils.copyToClipboard(elementId);
+            } else if (window.UI && UI.copyToClipboard) {
+                return UI.copyToClipboard(elementId);
+            }
         };
+        
+        // Dispara evento após transições AJAX
+        // Usado pelos módulos para reinicializar componentes
+        const triggerContentUpdate = () => {
+            const event = new CustomEvent('pageContentUpdated');
+            document.dispatchEvent(event);
+        };
+        
+        // Lógica de transição de página seria adicionada aqui
+        // Esse é um placeholder para a implementação
+        
+        // Para fins de teste, disparar o evento após carregamento
+        setTimeout(triggerContentUpdate, 100);
     }
     
     /**
