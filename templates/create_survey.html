@@ -26,7 +26,6 @@
 </style>
 {% endblock %}
 
-
 {% block content %}
 <div class="alert alert-info">
     <i class="bi bi-info-circle me-2"></i>
@@ -76,7 +75,7 @@
                     <!-- Campo de email removido da UI, substituído por campo oculto -->
                     <input type="hidden" id="admin_email" name="admin_email" value="{{ current_user.email }}">
                     
-                    <!-- Seção de calendário já está presente, apenas integraremos melhor -->
+                    <!-- Seção de calendário -->
                     <div class="mb-4">
                         <div class="calendar-container">
                             <div class="d-flex justify-content-between mb-3">
@@ -171,7 +170,9 @@
                                     <i class="bi bi-clipboard me-1"></i>{{ _('Copy') }}
                                 </button>
                             </div>
-                            <small class="text-muted">{{ _('Use this link to access the dashboard and view responses.') }} <strong>{{ _('Keep it private!') }}</strong></small>
+                            <small class="text-muted">{{ _('Use this link to access the dashboard and view responses.') }} 
+                                <strong>{{ _('Keep it private!') }}</strong>
+                            </small>
                         </div>
                     </div>
                     
@@ -191,37 +192,13 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Módulos de utilitários -->
+<!-- Scripts auxiliares (validação, date-utils, UI, etc.) -->
 <script src="{{ url_for('static', filename='js/utils/validation.js') }}"></script>
 <script src="{{ url_for('static', filename='js/utils/date-utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/utils/ui-utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/utils/api.js') }}"></script>
 
-<!-- Ouvinte para evento de atualização de página -->
+<!-- Variáveis de configuração para internacionalização -->
 <script>
-    document.addEventListener('pageContentUpdated', function() {
-        console.log('Evento pageContentUpdated recebido');
-        if (document.getElementById('calendar') && typeof DateUtils !== 'undefined') {
-            console.log('Inicializando calendário após atualização de página');
-            try {
-                // Se houver uma instância global já criada, usar a função initializeCalendar
-                if (typeof window.initializeCalendar === 'function') {
-                    window.initializeCalendar();
-                }
-                // Caso contrário, tentar usar o módulo create.js se disponível
-                else if (typeof window.selectedDates === 'undefined' && document.getElementById('create-survey-form')) {
-                    console.log('Forçando carregamento de create.js');
-                    const script = document.createElement('script');
-                    script.src = "{{ url_for('static', filename='js/pages/create.js') }}";
-                    document.body.appendChild(script);
-                }
-            } catch (error) {
-                console.error('Erro durante inicialização do calendário após atualização:', error);
-            }
-        }
-    });
-    
-    // Variáveis de configuração para internacionalização
     window.APP_CONFIG = {
         language: '{{ language_code[:2] }}',
         messages: {
@@ -236,6 +213,12 @@
     };
 </script>
 
-<!-- Carregar o script principal normalmente para primeira carga -->
+<!-- 1) Carrega o CLIENTE DE API (onde definimos window.APIClient) -->
+<script src="{{ url_for('static', filename='js/services/api-client.js') }}"></script>
+
+<!-- 2) Carrega o ADAPTADOR que injeta APIClient em GroupSesh.Utils.API -->
+<script src="{{ url_for('static', filename='js/utils/api.js') }}"></script>
+
+<!-- 3) Finalmente, carrega o create.js (lógica principal da página) -->
 <script src="{{ url_for('static', filename='js/pages/create.js') }}"></script>
 {% endblock %}

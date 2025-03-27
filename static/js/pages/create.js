@@ -83,13 +83,13 @@
             
             // Implementação mínima
             window.API = {
-                createSurvey: client.createSurvey ? 
-                    client.createSurvey.bind(client) : 
-                    async () => { throw new Error('API não disponível'); },
+                createSurvey: client.createSurvey 
+                    ? client.createSurvey.bind(client) 
+                    : async () => { throw new Error('API não disponível'); },
                 
-                joinSurvey: client.joinSurvey ?
-                    client.joinSurvey.bind(client) :
-                    async () => { throw new Error('API não disponível'); }
+                joinSurvey: client.joinSurvey 
+                    ? client.joinSurvey.bind(client) 
+                    : async () => { throw new Error('API não disponível'); }
             };
             
             // Adicionar ao namespace
@@ -160,7 +160,7 @@
     function initFormValidation(form) {
         if (!form) return;
         
-        // Adicionar eventos para limpar estados de validação ao digitar
+        // Ao digitar, remove a classe de erro
         form.querySelectorAll('input, textarea, select').forEach(field => {
             field.addEventListener('input', function() {
                 this.classList.remove('is-invalid');
@@ -202,7 +202,7 @@
                 throw new Error('Falha ao inicializar objeto calendário');
             }
             
-            // Disponibilizar globalmente para acesso pelo DOM
+            // Disponibilizar globalmente para acesso pelo DOM (opcional)
             window.calendar = calendar;
             
             console.log('Calendário inicializado com sucesso');
