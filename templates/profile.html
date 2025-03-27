@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Meu Perfil') }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">{{ _('Informações de Perfil') }}</h2>
+            </div>
+            <div class="card-body text-center">
+                {% if current_user.profile_picture %}
+                <img src="{{ current_user.profile_picture }}" alt="{{ current_user.name }}" class="rounded-circle mb-3 user-avatar" width="100" height="100">
+                {% else %}
+                <div class="avatar-placeholder mb-3">
+                    <i class="bi bi-person-circle" style="font-size: 80px;"></i>
+                </div>
+                {% endif %}
+                
+                <h3 class="h4">{{ current_user.name }}</h3>
+                <p class="text-muted">{{ current_user.email }}</p>
+                
+                <hr>
+                
+                <div class="text-start">
+                    <p>
+                        <strong>{{ _('Membro desde:') }}</strong><br>
+                        {{ current_user.created_at|date_format }}
+                    </p>
+                    
+                    <p>
+                        <strong>{{ _('Status da conta:') }}</strong><br>
+                        {% if current_user.is_verified %}
+                        <span class="badge bg-success">{{ _('Verificada') }}</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">{{ _('Não verificada') }}</span>
+                        <a href="#" id="resend-verification" class="ms-2 small">{{ _('Reenviar verificação') }}</a>
+                        {% endif %}
+                    </p>
+                    
+                    <p>
+                        <strong>{{ _('Métodos de login:') }}</strong><br>
+                        {% if current_user.password_hash %}
+                        <span class="badge bg-info">{{ _('Email/Senha') }}</span>
+                        {% endif %}
+                        
+                        {% if current_user.google_id %}
+                        <span class="badge bg-danger">{{ _('Google') }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">{{ _('Editar Perfil') }}</h2>
+            </div>
+            <div class="card-body">
+                {% include 'auth/partials/auth_messages.html' %}
+                
+                <form id="profile-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{{ _('Nome completo') }}</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ _('Email') }}</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required {% if current_user.google_id %}readonly{% endif %}>
+                        {% if current_user.google_id %}
+                        <div class="form-text">{{ _('O email está vinculado à sua conta do Google e não pode ser alterado.') }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">{{ _('Atualizar Perfil') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if current_user.password_hash %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">{{ _('Alterar Senha') }}</h2>
+            </div>
+            <div class="card-body">
+                <form id="password-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_type" value="password">
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">{{ _('Senha atual') }}</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">{{ _('Nova senha') }}</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="new_password" name="new_password" 
+                                   required minlength="6" onkeyup="checkPasswordStrength(this.value)">
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-1">
+                            <div class="password-strength" id="password-strength">
+                                <div class="strength-meter"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">{{ _('Confirmar nova senha') }}</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">{{ _('Alterar Senha') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% elif not current_user.google_id %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">{{ _('Definir Senha') }}</h2>
+            </div>
+            <div class="card-body">
+                <p>{{ _('Defina uma senha para poder acessar sua conta com email e senha.') }}</p>
+                
+                <form id="set-password-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_type" value="set_password">
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">{{ _('Nova senha') }}</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="new_password" name="new_password" 
+                                   required minlength="6" onkeyup="checkPasswordStrength(this.value)">
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-1">
+                            <div class="password-strength" id="password-strength">
+                                <div class="strength-meter"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">{{ _('Confirmar nova senha') }}</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">{{ _('Definir Senha') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if not current_user.google_id %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">{{ _('Conectar com Google') }}</h2>
+            </div>
+            <div class="card-body">
+                <p>{{ _('Conecte sua conta ao Google para facilitar o login.') }}</p>
+                
+                <div class="d-grid">
+                    <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline-dark">
+                        <img src="{{ url_for('static', filename='img/google-logo.svg') }}" alt="Google" height="20" class="me-2">
+                        {{ _('Conectar com Google') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card shadow-sm mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h2 class="h5 mb-0">{{ _('Zona de Perigo') }}</h2>
+            </div>
+            <div class="card-body">
+                <h5>{{ _('Excluir conta') }}</h5>
+                <p>{{ _('Esta ação não pode ser desfeita. Todas as suas informações serão permanentemente excluídas.') }}</p>
+                
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-account-modal">
+                    {{ _('Excluir minha conta') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão de Conta -->
+<div class="modal fade" id="delete-account-modal" tabindex="-1" aria-labelledby="delete-account-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="delete-account-modal-label">{{ _('Confirmar exclusão de conta') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ _('Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita.') }}</p>
+                
+                <form id="delete-account-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_type" value="delete_account">
+                    
+                    {% if current_user.password_hash %}
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ _('Digite sua senha para confirmar:') }}</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="confirm_delete" name="confirm_delete" required>
+                        <label class="form-check-label" for="confirm_delete">
+                            {{ _('Eu entendo que esta ação é permanente e não pode ser desfeita.') }}
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancelar') }}</button>
+                <button type="submit" form="delete-account-form" class="btn btn-danger">{{ _('Excluir Conta') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('bi-eye', 'bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('bi-eye-slash', 'bi-eye');
+                }
+            });
+        });
+        
+        // Resend verification email
+        const resendVerification = document.getElementById('resend-verification');
+        if (resendVerification) {
+            resendVerification.addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                try {
+                    const response = await fetch('/auth/resend-verification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        alert(data.message || 'Email de verificação reenviado com sucesso!');
+                    } else {
+                        alert('Falha ao reenviar email de verificação. Tente novamente mais tarde.');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro ao comunicar com o servidor. Tente novamente mais tarde.');
+                }
+            });
+        }
+        
+        // Form validation for change password
+        const passwordForm = document.getElementById('password-form');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', function(e) {
+                const newPassword = document.getElementById('new_password');
+                const confirmPassword = document.getElementById('confirm_password');
+                
+                if (newPassword.value !== confirmPassword.value) {
+                    e.preventDefault();
+                    alert('{{ _("As senhas não coincidem") }}');
+                }
+            });
+        }
+        
+        // Form validation for set password
+        const setPasswordForm = document.getElementById('set-password-form');
+        if (setPasswordForm) {
+            setPasswordForm.addEventListener('submit', function(e) {
+                const newPassword = document.getElementById('new_password');
+                const confirmPassword = document.getElementById('confirm_password');
+                
+                if (newPassword.value !== confirmPassword.value) {
+                    e.preventDefault();
+                    alert('{{ _("As senhas não coincidem") }}');
+                }
+            });
+        }
+    });
+    
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        const strengthMeter = document.querySelector('.strength-meter');
+        if (!strengthMeter) return;
+        
+        let strength = 0;
+        
+        if (password.length >= 6) {
+            strength += 1;
+        }
+        
+        if (password.length >= 8) {
+            strength += 1;
+        }
+        
+        if (/[A-Z]/.test(password)) {
+            strength += 1;
+        }
+        
+        if (/[0-9]/.test(password)) {
+            strength += 1;
+        }
+        
+        if (/[^A-Za-z0-9]/.test(password)) {
+            strength += 1;
+        }
+        
+        // Update strength meter
+        const percent = (strength / 5) * 100;
+        strengthMeter.style.width = percent + '%';
+        
+        // Update color
+        if (strength <= 1) {
+            strengthMeter.style.backgroundColor = '#dc3545'; // Weak - red
+        } else if (strength <= 3) {
+            strengthMeter.style.backgroundColor = '#ffc107'; // Medium - yellow
+        } else {
+            strengthMeter.style.backgroundColor = '#28a745'; // Strong - green
+        }
+    }
+</script>
+<style>
+    .user-avatar {
+        object-fit: cover;
+    }
+    
+    .password-strength {
+        height: 5px;
+        background-color: #e9ecef;
+        border-radius: 2px;
+        margin-top: 5px;
+    }
+    
+    .strength-meter {
+        height: 100%;
+        width: 0;
+        border-radius: 2px;
+        transition: width 0.3s, background-color 0.3s;
+    }
+</style>
+{% endblock %}

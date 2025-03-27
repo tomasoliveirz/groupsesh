@@ -1,0 +1,155 @@
+<!-- Modal de Autenticação -->
+<div class="modal fade" id="auth-modal" tabindex="-1" aria-labelledby="auth-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="auth-modal-label">{{ _('Entrar ou Registrar-se') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Abas de Login/Registro -->
+                <ul class="nav nav-tabs nav-fill mb-4" id="auth-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="login-tab" href="#" role="tab" aria-selected="true">
+                            {{ _('Login') }}
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="register-tab" href="#" role="tab" aria-selected="false">
+                            {{ _('Registrar') }}
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Login Form -->
+                <div id="login-form-container">
+                    <div class="login-error-message alert alert-danger d-none" role="alert"></div>
+                    
+                    {% if google_oauth_enabled %}
+                    <!-- Google Login Button -->
+                    <div class="text-center mb-4">
+                        <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline-dark d-block w-100 google-login-btn">
+                            <img src="{{ url_for('static', filename='img/google-logo.svg') }}" alt="Google" height="20" class="me-2">
+                            {{ _('Entrar com Google') }}
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <span class="divider-text">{{ _('ou') }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <form id="login-modal-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">{{ _('Email') }}</label>
+                            <input type="email" class="form-control" id="login-email" name="email" required>
+                            <div class="invalid-feedback">{{ _('Por favor, insira um email válido.') }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <label for="login-password" class="form-label">{{ _('Senha') }}</label>
+                                <a href="{{ url_for('auth.reset_password_request') }}" class="small">{{ _('Esqueceu?') }}</a>
+                            </div>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="login-password" name="password" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">{{ _('Por favor, insira sua senha.') }}</div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="login-remember" name="remember" checked>
+                            <label class="form-check-label" for="login-remember">{{ _('Lembrar de mim') }}</label>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">{{ _('Entrar') }}</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="register-form-container" class="d-none">
+                    <div class="register-success-message alert alert-success d-none" role="alert"></div>
+                    <div class="register-error-message alert alert-danger d-none" role="alert"></div>
+                    
+                    {% if google_oauth_enabled %}
+                    <!-- Google Login Button -->
+                    <div class="text-center mb-4">
+                        <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline-dark d-block w-100 google-login-btn">
+                            <img src="{{ url_for('static', filename='img/google-logo.svg') }}" alt="Google" height="20" class="me-2">
+                            {{ _('Continuar com Google') }}
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <span class="divider-text">{{ _('ou') }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <form id="register-modal-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="register-name" class="form-label">{{ _('Nome completo') }}</label>
+                            <input type="text" class="form-control" id="register-name" name="name" required>
+                            <div class="invalid-feedback">{{ _('Por favor, insira seu nome.') }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="register-email" class="form-label">{{ _('Email') }}</label>
+                            <input type="email" class="form-control" id="register-email" name="email" required>
+                            <div class="invalid-feedback">{{ _('Por favor, insira um email válido.') }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="register-password" class="form-label">{{ _('Senha') }}</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="register-password" name="password" 
+                                       required minlength="6">
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">{{ _('A senha deve ter pelo menos 6 caracteres.') }}</div>
+                            <div class="mt-1">
+                                <div class="password-strength">
+                                    <div class="strength-meter"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="register-confirm-password" class="form-label">{{ _('Confirmar senha') }}</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="register-confirm-password" 
+                                       name="confirm_password" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">{{ _('As senhas não coincidem.') }}</div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="register-terms" name="terms" required>
+                            <label class="form-check-label" for="register-terms">
+                                {{ _('Concordo com os') }} <a href="#terms-modal" data-bs-toggle="modal">{{ _('Termos') }}</a>
+                            </label>
+                            <div class="invalid-feedback">{{ _('Você deve concordar com os termos.') }}</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">{{ _('Registrar') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Login') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0 h4">{{ _('Login') }}</h2>
+            </div>
+            <div class="card-body">
+                {% include 'auth/partials/auth_messages.html' %}
+                
+                {% if google_oauth_enabled %}
+                <!-- Google Login Button -->
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('auth.google_login') }}" class="btn btn-outline-dark btn-lg d-block w-100">
+                        <img src="{{ url_for('static', filename='img/google-logo.svg') }}" alt="Google" height="20" class="me-2">
+                        {{ _('Entrar com Google') }}
+                    </a>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <span class="divider-text">{{ _('ou') }}</span>
+                </div>
+                {% endif %}
+                
+                <!-- Manual Login Form -->
+                <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ _('Email') }} <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="invalid-feedback">{{ _('Por favor, insira um email válido.') }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <label for="password" class="form-label">{{ _('Senha') }} <span class="text-danger">*</span></label>
+                            <a href="{{ url_for('auth.reset_password_request') }}" class="small">{{ _('Esqueceu a senha?') }}</a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">{{ _('Por favor, insira sua senha.') }}</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">{{ _('Lembrar de mim') }}</label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">{{ _('Entrar') }}</button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <p>{{ _('Não tem uma conta?') }} <a href="{{ url_for('auth.register') }}">{{ _('Registre-se') }}</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('bi-eye', 'bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('bi-eye-slash', 'bi-eye');
+                }
+            });
+        });
+        
+        // Form validation
+        const form = document.getElementById('login-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const email = document.getElementById('email');
+                const password = document.getElementById('password');
+                let isValid = true;
+                
+                // Reset validation
+                email.classList.remove('is-invalid');
+                password.classList.remove('is-invalid');
+                
+                // Validate email
+                if (!email.value.trim()) {
+                    email.classList.add('is-invalid');
+                    isValid = false;
+                }
+                
+                // Validate password
+                if (!password.value.trim()) {
+                    password.classList.add('is-invalid');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
