@@ -1,0 +1,39 @@
+<!-- Módulos de utilitários -->
+<script src="{{ url_for('static', filename='js/utils/validation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/date-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/ui-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/api.js') }}"></script>
+
+<!-- Bibliotecas externas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<!-- Módulo principal do dashboard -->
+<script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
+
+<!-- Variáveis de configuração para a página -->
+<script>
+    // Dados iniciais para bootstrapping do dashboard
+    window.DASHBOARD_CONFIG = {
+        survey: {
+            id: {{ survey.id }},
+            token: "{{ survey.token }}",
+            title: "{{ survey.title }}",
+            admin_email: "{{ survey.admin_email }}",
+            admin_name: "{{ survey.admin_name }}",
+            created_at: "{{ survey.created_at }}",
+            expires_at: "{{ survey.expires_at }}"
+        },
+        language: "{{ language_code }}",
+        paths: {
+            survey_info: "/api/survey-info/{{ survey.token }}",
+            survey_data: "/api/survey-data/{{ survey.token }}"
+        }
+    };
+    
+    // Ouvinte para garantir inicialização após transições AJAX
+    document.addEventListener('pageContentUpdated', function() {
+        if (typeof window.initDashboard === 'function') {
+            window.initDashboard();
+        }
+    });
+</script>

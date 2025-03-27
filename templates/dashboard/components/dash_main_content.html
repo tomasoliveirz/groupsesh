@@ -1,0 +1,28 @@
+<div class="col-md-8 mb-4">
+    <div class="card h-100">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="dashboard-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="calendar-tab" data-bs-toggle="tab" 
+                            data-bs-target="#calendar-tab-pane" type="button" role="tab" 
+                            aria-controls="calendar-tab-pane" aria-selected="true">
+                        {{ _('Calendar') }}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="participants-tab" data-bs-toggle="tab" 
+                            data-bs-target="#participants-tab-pane" type="button" role="tab" 
+                            aria-controls="participants-tab-pane" aria-selected="false">
+                        {{ _('Participants') }}
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="dashboard-tabs-content">
+                {% include 'dashboard/components/calendar_tab.html' %}
+                {% include 'dashboard/components/participants_tab.html' %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Verificar Administrador') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0 h4">{{ _('Verificar Administrador') }}</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    {{ _('Esta área é restrita ao administrador da pesquisa.') }}
+                </div>
+                
+                <h5>{{ _('Pesquisa') }}: {{ survey.title }}</h5>
+                <p>{{ _('Criado por') }}: {{ survey.admin_name }}</p>
+                
+                {% if current_user.is_authenticated %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {{ _('Você está logado como') }} <strong>{{ current_user.name }}</strong>, 
+                        {{ _('mas não é o administrador desta pesquisa.') }}
+                    </div>
+                    
+                    <p>{{ _('Para acessar como administrador, você precisa:') }}</p>
+                    <ul>
+                        <li>{{ _('Sair da sua conta atual') }}</li>
+                        <li>{{ _('Fazer login com a conta associada ao email') }} <strong>{{ survey.admin_email }}</strong></li>
+                    </ul>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-box-arrow-right me-2"></i>{{ _('Sair da conta atual') }}
+                        </a>
+                    </div>
+                {% else %}
+                    <p>{{ _('Por favor, informe o email do administrador para verificação:') }}</p>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">{{ _('Email do Administrador') }}</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p>{{ _('Ou, se preferir, você pode:') }}</p>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('auth.login') }}?next={{ url_for('dashboard_page', token=survey.token, lang_code=g.lang_code) }}" class="btn btn-primary">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>{{ _('Fazer login como administrador') }}
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>{{ _('Verificar acesso') }}
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

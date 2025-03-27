@@ -1,0 +1,66 @@
+<style>
+    .participant-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .participant-card:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    .fc-day-has-participants {
+        position: relative;
+    }
+    .fc-day-has-participants:after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 12px 12px 0;
+        border-color: transparent #198754 transparent transparent;
+    }
+    .participant-count {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background-color: #198754;
+        color: white;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+        line-height: 22px;
+        text-align: center;
+    }
+    .highlight-participants .fc-daygrid-day-frame {
+        transition: background-color 0.3s;
+    }
+    .highlight-participants[data-count="0"] .fc-daygrid-day-frame {
+        background-color: #f8d7da !important;
+    }
+    .highlight-participants[data-count="1"] .fc-daygrid-day-frame {
+        background-color: #fff3cd !important;
+    }
+    .highlight-participants[data-count="2"] .fc-daygrid-day-frame {
+        background-color: #d1e7dd !important;
+    }
+    .highlight-participants[data-count="3"] .fc-daygrid-day-frame,
+    .highlight-participants[data-count="4"] .fc-daygrid-day-frame,
+    .highlight-participants[data-count="5+"] .fc-daygrid-day-frame {
+        background-color: #bfe5c7 !important;
+    }
+    .admin-badge {
+        background-color: #4F46E5;
+        color: white;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 1rem;
+        margin-left: 0.5rem;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .admin-participant {
+        border-left: 3px solid #4F46E5;
+    }
+</style>

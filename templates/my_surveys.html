@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Minhas Pesquisas') }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">{{ _('Minhas Pesquisas') }}</h1>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">{{ _('Pesquisas Criadas por Mim') }}</h2>
+                </div>
+                <div class="card-body">
+                    {% if created_surveys %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Título') }}</th>
+                                        <th>{{ _('Data de Criação') }}</th>
+                                        <th>{{ _('Expira em') }}</th>
+                                        <th>{{ _('Status') }}</th>
+                                        <th>{{ _('Ações') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for survey in created_surveys %}
+                                    <tr>
+                                        <td>{{ survey.title }}</td>
+                                        <td>{{ survey.created_at|date_format }}</td>
+                                        <td>{{ survey.expires_at|date_format }}</td>
+                                        <td>
+                                            {% if survey.is_expired %}
+                                            <span class="badge bg-danger">{{ _('Expirada') }}</span>
+                                            {% else %}
+                                            <span class="badge bg-success">{{ _('Ativa') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('dashboard_page', token=survey.token, lang_code=g.lang_code) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-graph-up me-1"></i>{{ _('Dashboard') }}
+                                                </a>
+                                                <a href="{{ url_for('join_survey_page', token=survey.token, lang_code=g.lang_code) }}" 
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-link-45deg me-1"></i>{{ _('Link') }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {{ _('Você ainda não criou nenhuma pesquisa.') }}
+                        </div>
+                        <a href="{{ url_for('create_survey_page', lang_code=g.lang_code) }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>{{ _('Criar Nova Pesquisa') }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">{{ _('Pesquisas que Participei') }}</h2>
+                </div>
+                <div class="card-body">
+                    {% if participated_surveys %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Título') }}</th>
+                                        <th>{{ _('Organizador') }}</th>
+                                        <th>{{ _('Data de Criação') }}</th>
+                                        <th>{{ _('Status') }}</th>
+                                        <th>{{ _('Ações') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for survey in participated_surveys %}
+                                    <tr>
+                                        <td>{{ survey.title }}</td>
+                                        <td>{{ survey.admin_name }}</td>
+                                        <td>{{ survey.created_at|date_format }}</td>
+                                        <td>
+                                            {% if survey.is_expired %}
+                                            <span class="badge bg-danger">{{ _('Expirada') }}</span>
+                                            {% else %}
+                                            <span class="badge bg-success">{{ _('Ativa') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('join_survey_page', token=survey.token, lang_code=g.lang_code) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-calendar-check me-1"></i>{{ _('Ver Pesquisa') }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {{ _('Você ainda não participou de nenhuma pesquisa.') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
