@@ -47,10 +47,28 @@
         };
     };
     
+    // Verifica se estamos na página de dashboard
+    const isDashboardPage = function() {
+        // Verifica se o pathname contém "/dashboard/" e se o elemento do calendário existe
+        const isDashPath = window.location.pathname.includes('/dashboard/');
+        const hasCalendar = !!document.getElementById('calendar');
+        const hasDashboardTabs = !!document.getElementById('dashboard-tabs');
+        
+        return isDashPath && (hasCalendar || hasDashboardTabs);
+    };
+    
     /**
      * Inicializa o dashboard
      */
     const initDashboard = function() {
+        // Primeiro verificamos se estamos realmente em uma página de dashboard
+        if (!isDashboardPage()) {
+            console.log('Não estamos em uma página de dashboard, ignorando inicialização');
+            return;
+        }
+        
+        console.log('Initializing dashboard core...');
+        
         // Verificar dependências
         const deps = checkDependencies();
         if (!deps.success) {
@@ -66,37 +84,68 @@
             return;
         }
         
+        // Extrair o token da URL se estivermos na página do dashboard
+        const extractTokenFromURL = function() {
+            const pathname = window.location.pathname;
+            if (pathname.includes('/dashboard/')) {
+                const parts = pathname.split('/');
+                return parts[parts.length - 1];
+            }
+            return null;
+        };
+        
+        // Se não tivermos configuração mas tivermos um token na URL, criar uma configuração básica
+        if (!window.DASHBOARD_CONFIG && isDashboardPage()) {
+            const token = extractTokenFromURL();
+            if (token) {
+                console.log(`Creating dashboard config with token: ${token}`);
+                window.DASHBOARD_CONFIG = {
+                    survey: { token: token },
+                    paths: {
+                        survey_info: `/api/survey-info/${token}`,
+                        survey_data: `/api/survey-data/${token}`
+                    }
+                };
+            }
+        }
+        
         // Inicializar o dashboard
         GroupSesh.Dashboard.Core.init(window.DASHBOARD_CONFIG);
-        
-        // Registrar evento de atualização de página (para recarregar após transições AJAX)
-        document.addEventListener('pageContentUpdated', function() {
-            console.log('Page content updated, reinitializing dashboard');
-            GroupSesh.Dashboard.Core.init(window.DASHBOARD_CONFIG);
-        });
-        
-        // Registrar manipulador de eventos para notificações importantes
-        GroupSesh.Core.Events.subscribe('dashboard:error', function(error) {
-            console.error('Dashboard error event:', error);
-            
-            const container = document.querySelector('.card-body');
-            if (container) {
-                GroupSesh.UI.Notifications.showError(
-                    error.message || 'An error occurred in the dashboard', 
-                    container
-                );
-            }
-        });
     };
+    
+    // Handler específico para o evento pageContentUpdated
+    const handlePageContentUpdated = function(event) {
+        // Verificar se o evento tem informações específicas sobre o tipo de página
+        if (event.detail && event.detail.pageType === 'dashboard') {
+            console.log('Page content updated for dashboard page, reinitializing dashboard');
+            initDashboard();
+        } else if (isDashboardPage()) {
+            // Caso o evento não tenha informações específicas, verificamos manualmente
+            console.log('Page content updated, checking if we are on a dashboard page');
+            initDashboard();
+        }
+    };
+    
+    // Remover ouvintes duplicados
+    document.removeEventListener('pageContentUpdated', handlePageContentUpdated);
+    
+    // Registrar evento de atualização de página (para recarregar após transições AJAX)
+    document.addEventListener('pageContentUpdated', handlePageContentUpdated);
     
     // Expor função de inicialização globalmente
     window.initDashboard = initDashboard;
     
     // Inicializar quando o DOM estiver pronto
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDashboard);
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isDashboardPage()) {
+                initDashboard();
+            }
+        });
     } else {
         // O DOM já está pronto
-        initDashboard();
+        if (isDashboardPage()) {
+            initDashboard();
+        }
     }
 })();

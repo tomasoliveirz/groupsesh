@@ -10,20 +10,100 @@
     window.GroupSesh.Utils = window.GroupSesh.Utils || {};
     
     // Conjunto para armazenar datas selecionadas
-    let selectedDates = new Set();
+    window.selectedDates = window.selectedDates || new Set();
     // Instância do calendário
-    let calendar = null;
+    window.calendar = window.calendar || null;
+    
+    // ===================================================
+    // DEFINIR FUNÇÕES UTILITÁRIAS CRÍTICAS LOCALMENTE
+    // para garantir que estejam sempre disponíveis
+    // ===================================================
+    
+    // Implementação local segura de isPastDate
+    function isPastDate(date) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const checkDate = date instanceof Date ? date : new Date(date);
+        checkDate.setHours(0, 0, 0, 0);
+        
+        return checkDate < today;
+    }
+    
+    // Verificar se o CSS do calendário unificado existe, senão injetar
+    function ensureCalendarCSS() {
+        if (document.getElementById('calendar-unified-css')) {
+            return;
+        }
+        
+        console.log('[CreateSurvey] Injetando CSS unificado para calendário');
+        const style = document.createElement('style');
+        style.id = 'calendar-unified-css';
+        style.textContent = `
+        /* Células dos Dias */
+        .fc-daygrid-day {
+            transition: background-color 0.25s ease;
+        }
+
+        .fc-day-future {
+            cursor: pointer !important;
+            position: relative;
+        }
+
+        .fc-day-future:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        /* Altura mínima das células */
+        .fc-daygrid-day-frame {
+            min-height: 80px;
+            transition: background-color 0.25s ease;
+        }
+
+        /* Dias Selecionados - Create Survey */
+        .fc-day-selected {
+            background-color: rgba(13, 110, 253, 0.25) !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Dias passados */
+        .fc-day-past {
+            background-color: #f8f9fa;
+            cursor: not-allowed !important;
+        }
+
+        .theme-dark .fc-day-past {
+            background-color: #2a2a2a;
+        }
+        `;
+        document.head.appendChild(style);
+    }
     
     // Verificar se o ambiente está pronto para inicialização
     function checkEnvironmentReady() {
+        console.log('[CreateSurvey] checkEnvironmentReady called');
+        
+        // Verificar se estamos realmente na página de criação de survey
+        const form = document.getElementById('create-survey-form');
+        const calendarEl = document.getElementById('calendar');
+        
+        if (!form || !calendarEl) {
+            console.log('[CreateSurvey] Não estamos na página de criação de survey, ignorando inicialização');
+            return;
+        }
+        
         // Verificar se o FullCalendar está disponível
         if (typeof FullCalendar === 'undefined') {
-            console.warn('FullCalendar não disponível. Tentando novamente em 100ms...');
+            console.warn('[CreateSurvey] FullCalendar não disponível. Tentando novamente em 100ms...');
             setTimeout(checkEnvironmentReady, 100);
             return;
         }
         
-        console.log("Ambiente básico verificado, prosseguindo com inicialização");
+        console.log("[CreateSurvey] Ambiente básico verificado, prosseguindo com inicialização");
+        
+        // Garantir que o CSS do calendário existe
+        ensureCalendarCSS();
         
         // Inicializar fallbacks para dependências essenciais
         ensureCriticalDependencies();
@@ -36,19 +116,11 @@
     function ensureCriticalDependencies() {
         // Fallback para DateUtils se não estiver disponível
         if (typeof DateUtils === 'undefined' && !GroupSesh.Utils.DateUtils) {
-            console.warn("DateUtils não encontrado, criando implementação básica");
+            console.warn("[CreateSurvey] DateUtils não encontrado, criando implementação básica");
             
             // Implementação mínima necessária
             window.DateUtils = {
-                isPastDate: function(date) {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    
-                    const checkDate = date instanceof Date ? date : new Date(date);
-                    checkDate.setHours(0, 0, 0, 0);
-                    
-                    return checkDate < today;
-                },
+                isPastDate: isPastDate,
                 initCalendar: function(element, options = {}) {
                     if (!element) return null;
                     
@@ -64,7 +136,7 @@
                         calendar.render();
                         return calendar;
                     } catch (error) {
-                        console.error('Erro ao inicializar calendário:', error);
+                        console.error('[CreateSurvey] Erro ao inicializar calendário:', error);
                         return null;
                     }
                 }
@@ -72,11 +144,22 @@
             
             // Também adicionar ao namespace correto
             GroupSesh.Utils.DateUtils = window.DateUtils;
+        } else {
+            // Se DateUtils existe, garantir que isPastDate existe
+            if (typeof DateUtils !== 'undefined' && typeof DateUtils.isPastDate !== 'function') {
+                console.warn("[CreateSurvey] DateUtils existe, mas isPastDate não está definido. Aplicando patch...");
+                DateUtils.isPastDate = isPastDate;
+            }
+            
+            if (GroupSesh.Utils.DateUtils && typeof GroupSesh.Utils.DateUtils.isPastDate !== 'function') {
+                console.warn("[CreateSurvey] GroupSesh.Utils.DateUtils existe, mas isPastDate não está definido. Aplicando patch...");
+                GroupSesh.Utils.DateUtils.isPastDate = isPastDate;
+            }
         }
         
         // Verificar se API está disponível, senão criar stub
         if (!GroupSesh.Utils.API && typeof API === 'undefined') {
-            console.warn("API não encontrada, criando adaptador para APIClient");
+            console.warn("[CreateSurvey] API não encontrada, criando adaptador para APIClient");
             
             // Tentar usar APIClient se disponível
             const client = window.APIClient || {};
@@ -98,7 +181,7 @@
         
         // Verificar se UI está disponível
         if (!GroupSesh.Utils.UIUtils && typeof UI === 'undefined') {
-            console.warn("UIUtils não encontrado, criando implementação básica");
+            console.warn("[CreateSurvey] UIUtils não encontrado, criando implementação básica");
             
             // Implementação mínima
             window.UI = {
@@ -132,18 +215,35 @@
     
     // Inicialização principal
     function init() {
-        console.log('Inicializando módulo de criação de survey...');
+        console.log('[CreateSurvey] Inicializando módulo de criação de survey...');
+        
+        // Verificar novamente se estamos na página de criação de survey
+        const form = document.getElementById('create-survey-form');
+        const calendarEl = document.getElementById('calendar');
+        
+        if (!form || !calendarEl) {
+            console.log('[CreateSurvey] Não estamos na página de criação de survey, abortando inicialização');
+            return;
+        }
+        
+        // Limpar qualquer instância anterior de calendário
+        if (window.calendar && typeof window.calendar.destroy === 'function') {
+            console.log('[CreateSurvey] Destruindo instância anterior do calendário');
+            window.calendar.destroy();
+            window.calendar = null;
+        }
+        
+        // Resetar selectedDates para garantir um estado limpo
+        // window.selectedDates.clear(); // Comentado para manter seleções entre inicializações
         
         // Elementos DOM principais
-        const form = document.getElementById('create-survey-form');
         const submitButton = document.getElementById('submit-button');
         const resultContainer = document.getElementById('survey-result');
         const selectedDatesInput = document.getElementById('selected-dates');
         const selectedDaysCounter = document.getElementById('selected-days-counter');
-        const calendarEl = document.getElementById('calendar');
         
-        if (!form || !submitButton || !resultContainer || !calendarEl) {
-            console.error('Elementos DOM essenciais não encontrados. Verificar estrutura HTML.');
+        if (!submitButton || !resultContainer) {
+            console.error('[CreateSurvey] Elementos DOM essenciais não encontrados. Verificar estrutura HTML.');
             return;
         }
         
@@ -153,7 +253,7 @@
         setupCalendarNavigation();
         setupFormSubmission(form, submitButton, resultContainer);
         
-        console.log('Inicialização concluída com sucesso.');
+        console.log('[CreateSurvey] Inicialização concluída com sucesso.');
     }
     
     // Inicialização do formulário
@@ -174,44 +274,121 @@
         });
     }
     
+    // Handler para clique em data no calendário
+    function handleDateClick(info) {
+        console.log('[CreateSurvey] Clique em data:', info.dateStr);
+        
+        const dateStr = info.dateStr;
+        const dayEl = info.dayEl;
+        
+        // Usar a função isPastDate local e segura
+        if (isPastDate(info.date)) {
+            console.log('[CreateSurvey] Data passada, ignorando clique');
+            return;
+        }
+        
+        // Toggle seleção
+        if (window.selectedDates.has(dateStr)) {
+            console.log('[CreateSurvey] Removendo data da seleção:', dateStr);
+            window.selectedDates.delete(dateStr);
+            dayEl.classList.remove('fc-day-selected');
+        } else {
+            console.log('[CreateSurvey] Adicionando data à seleção:', dateStr);
+            window.selectedDates.add(dateStr);
+            dayEl.classList.add('fc-day-selected');
+        }
+        
+        // Atualizar UI
+        updateSelectedDatesUI();
+    }
+    
+    /**
+     * Handler para o evento datesSet do FullCalendar
+     * Este evento é disparado quando a visualização do calendário muda (mudança de mês, ano, etc.)
+     * Usamos para reaplciar as classes visuais aos dias que estão selecionados
+     */
+    function handleDatesSet(info) {
+        console.log('[CreateSurvey] Visualização do calendário mudou, reaplicando seleções visuais');
+        
+        // Se não há dias selecionados, não precisa fazer nada
+        if (!window.selectedDates || window.selectedDates.size === 0) {
+            return;
+        }
+        
+        // Para cada data selecionada, encontrar o elemento do dia correspondente e adicionar a classe
+        setTimeout(() => {
+            window.selectedDates.forEach(dateStr => {
+                // Encontrar o elemento do dia usando o seletor correto
+                // FullCalendar usa atributos data-date para identificar os dias
+                const dayEl = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+                if (dayEl) {
+                    console.log(`[CreateSurvey] Reaplicando classe de seleção visual ao dia ${dateStr}`);
+                    dayEl.classList.add('fc-day-selected');
+                }
+            });
+        }, 10); // Pequeno timeout para garantir que o DOM foi atualizado
+    }
+    
     // Inicialização do calendário
     function initializeCalendar(calendarEl) {
         if (!calendarEl) {
-            console.error('Elemento do calendário não encontrado');
+            console.error('[CreateSurvey] Elemento do calendário não encontrado');
             return null;
         }
         
         try {
-            console.log('Inicializando calendário...');
+            console.log('[CreateSurvey] Inicializando calendário...');
             
-            // Obter a implementação de DateUtils mais adequada
-            const dateUtilsModule = GroupSesh.Utils.DateUtils || window.DateUtils;
+            // Garantir que o CSS do calendário existe
+            ensureCalendarCSS();
             
-            if (!dateUtilsModule || typeof dateUtilsModule.initCalendar !== 'function') {
-                throw new Error('DateUtils não possui método initCalendar válido');
+            // Destruir qualquer instância existente
+            if (window.calendar && typeof window.calendar.destroy === 'function') {
+                window.calendar.destroy();
+                window.calendar = null;
             }
             
-            // Inicializar calendário
-            calendar = dateUtilsModule.initCalendar(calendarEl, {
-                dateClick: handleDateClick,
+            // Criar nova instância diretamente
+            window.calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                height: 'auto'
+                height: 'auto',
+                locale: document.documentElement.lang?.substring(0, 2) || 'pt',
+                dateClick: handleDateClick,  // Usar nossa função diretamente
+                datesSet: handleDatesSet,    // NOVO: Adicionar handler para evento datesSet
+                selectable: true,
+                dayMaxEvents: true,
+                fixedWeekCount: false
             });
             
-            if (!calendar) {
-                throw new Error('Falha ao inicializar objeto calendário');
-            }
+            window.calendar.render();
+            console.log('[CreateSurvey] Calendário inicializado com sucesso');
             
-            // Disponibilizar globalmente para acesso pelo DOM (opcional)
-            window.calendar = calendar;
+            // Restaurar seleções visuais
+            // Isso vai ser chamado automaticamente pelo evento datesSet quando o calendário for renderizado
             
-            console.log('Calendário inicializado com sucesso');
-            return calendar;
+            return window.calendar;
         } catch (error) {
-            console.error('Erro crítico na inicialização do calendário:', error);
+            console.error('[CreateSurvey] Erro crítico na inicialização do calendário:', error);
             showCalendarError(error.message, calendarEl);
             return null;
         }
+    }
+    
+    // Restaura os estilos visuais das datas selecionadas no calendário atual
+    function applySelectedDatesVisuals() {
+        if (!window.selectedDates || window.selectedDates.size === 0 || !window.calendar) {
+            return;
+        }
+        
+        console.log('[CreateSurvey] Aplicando estilos visuais para', window.selectedDates.size, 'dias selecionados');
+        
+        // Para cada data selecionada, encontrar o elemento do dia no calendário atual e marcar
+        window.selectedDates.forEach(dateStr => {
+            const dayEl = document.querySelector(`.fc-daygrid-day[data-date="${dateStr}"]`);
+            if (dayEl) {
+                dayEl.classList.add('fc-day-selected');
+            }
+        });
     }
     
     // Configuração dos botões de navegação do calendário
@@ -222,45 +399,33 @@
         
         if (prevMonthBtn) {
             prevMonthBtn.addEventListener('click', function() {
-                if (calendar) calendar.prev();
+                if (window.calendar) {
+                    window.calendar.prev();
+                    // Não é necessário chamar applySelectedDatesVisuals aqui,
+                    // pois o evento datesSet será disparado automaticamente
+                }
             });
         }
         
         if (nextMonthBtn) {
             nextMonthBtn.addEventListener('click', function() {
-                if (calendar) calendar.next();
+                if (window.calendar) {
+                    window.calendar.next();
+                    // Não é necessário chamar applySelectedDatesVisuals aqui,
+                    // pois o evento datesSet será disparado automaticamente
+                }
             });
         }
         
         if (todayBtn) {
             todayBtn.addEventListener('click', function() {
-                if (calendar) calendar.today();
+                if (window.calendar) {
+                    window.calendar.today();
+                    // Não é necessário chamar applySelectedDatesVisuals aqui,
+                    // pois o evento datesSet será disparado automaticamente
+                }
             });
         }
-    }
-    
-    // Handler para clique em data no calendário
-    function handleDateClick(info) {
-        const dateStr = info.dateStr;
-        const dayEl = info.dayEl;
-        
-        // Obter implementação adequada de DateUtils
-        const dateUtilsModule = GroupSesh.Utils.DateUtils || window.DateUtils;
-        
-        // Ignorar datas passadas
-        if (dateUtilsModule.isPastDate(info.date)) return;
-        
-        // Toggle seleção
-        if (selectedDates.has(dateStr)) {
-            selectedDates.delete(dateStr);
-            dayEl.classList.remove('fc-day-selected');
-        } else {
-            selectedDates.add(dateStr);
-            dayEl.classList.add('fc-day-selected');
-        }
-        
-        // Atualizar UI
-        updateSelectedDatesUI();
     }
     
     // Atualiza interface com datas selecionadas
@@ -269,17 +434,19 @@
         const datesInput = document.getElementById('selected-dates');
         
         if (daysCounter) {
-            daysCounter.textContent = selectedDates.size;
+            daysCounter.textContent = window.selectedDates.size;
         }
         
         if (datesInput) {
-            datesInput.value = Array.from(selectedDates).join(',');
+            datesInput.value = Array.from(window.selectedDates).join(',');
         }
         
         const calendarFeedback = document.getElementById('calendar-feedback');
         if (calendarFeedback) {
-            calendarFeedback.style.display = selectedDates.size > 0 ? 'none' : 'block';
+            calendarFeedback.style.display = window.selectedDates.size > 0 ? 'none' : 'block';
         }
+        
+        console.log('[CreateSurvey] Datas selecionadas atualizadas, total:', window.selectedDates.size);
     }
     
     // Exibe erro do calendário
@@ -309,14 +476,14 @@
             e.preventDefault();
             
             if (!validateForm(form)) {
-                console.warn('Formulário inválido. Corrigindo erros antes de prosseguir.');
+                console.warn('[CreateSurvey] Formulário inválido. Corrigindo erros antes de prosseguir.');
                 return;
             }
             
-            if (selectedDates.size === 0) {
+            if (window.selectedDates.size === 0) {
                 const calendarFeedback = document.getElementById('calendar-feedback');
                 if (calendarFeedback) calendarFeedback.style.display = 'block';
-                console.warn('Nenhuma data selecionada. Seleção de datas é obrigatória.');
+                console.warn('[CreateSurvey] Nenhuma data selecionada. Seleção de datas é obrigatória.');
                 return;
             }
             
@@ -325,7 +492,7 @@
             submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${window.APP_CONFIG?.messages?.creating || 'Criando...'}`;
             
             try {
-                console.log('Iniciando submissão de formulário...');
+                console.log('[CreateSurvey] Iniciando submissão de formulário...');
                 
                 // Preparar dados da survey
                 const surveyData = {
@@ -335,7 +502,7 @@
                     admin_email: document.getElementById('admin_email').value
                 };
                 
-                console.log('Dados da survey:', surveyData);
+                console.log('[CreateSurvey] Dados da survey:', surveyData);
                 
                 // Obter módulo API adequado
                 const apiModule = GroupSesh.Utils.API || window.API || window.APIClient;
@@ -345,21 +512,21 @@
                 }
                 
                 // Criar survey
-                console.log('Chamando API.createSurvey...');
+                console.log('[CreateSurvey] Chamando API.createSurvey...');
                 const surveyResponse = await apiModule.createSurvey(surveyData);
-                console.log('Survey criada com sucesso:', surveyResponse);
+                console.log('[CreateSurvey] Survey criada com sucesso:', surveyResponse);
                 
                 // Dados de disponibilidade
                 const availabilityData = {
                     name: surveyData.admin_name,
                     email: surveyData.admin_email,
-                    availability_dates: Array.from(selectedDates)
+                    availability_dates: Array.from(window.selectedDates)
                 };
                 
                 // Registrar disponibilidade
-                console.log('Registrando disponibilidade do administrador...');
+                console.log('[CreateSurvey] Registrando disponibilidade do administrador...');
                 await apiModule.joinSurvey(surveyResponse.survey.token, availabilityData);
-                console.log('Disponibilidade registrada com sucesso');
+                console.log('[CreateSurvey] Disponibilidade registrada com sucesso');
                 
                 // Atualizar links na interface
                 const participantLinkInput = document.getElementById('participant-link');
@@ -390,11 +557,11 @@
                         localStorage.setItem('lastSurveyAdminName', surveyData.admin_name);
                         localStorage.setItem('lastSurveyToken', surveyResponse.survey.token);
                     } catch (storageError) {
-                        console.warn('Erro ao salvar no localStorage:', storageError);
+                        console.warn('[CreateSurvey] Erro ao salvar no localStorage:', storageError);
                     }
                 }, 300);
             } catch (error) {
-                console.error('Erro na submissão do formulário:', error);
+                console.error('[CreateSurvey] Erro na submissão do formulário:', error);
                 
                 // Obter módulo UI adequado
                 const uiModule = GroupSesh.Utils.UIUtils || window.UI;
@@ -449,7 +616,7 @@
         form.reset();
         
         // Limpar seleções do calendário
-        selectedDates.clear();
+        window.selectedDates.clear();
         document.querySelectorAll('.fc-day-selected').forEach(day => {
             day.classList.remove('fc-day-selected');
         });
@@ -491,19 +658,89 @@
             case 'copy':
                 navigator.clipboard.writeText(link)
                     .then(() => alert(window.APP_CONFIG?.messages?.copied || 'Link copiado!'))
-                    .catch(err => console.error('Erro ao copiar link:', err));
+                    .catch(err => console.error('[CreateSurvey] Erro ao copiar link:', err));
                 break;
         }
     };
     
+    // Verificar se estamos realmente na página de create-survey antes de adicionar o
+    // evento pageContentUpdated, para evitar execução desnecessária em outras páginas
+    function isCreateSurveyPage() {
+        return !!document.getElementById('create-survey-form');
+    }
+    
+    // Manipulador de evento para pageContentUpdated
+    function handlePageContentUpdated(event) {
+        // Verifica se o evento inclui detalhes sobre o tipo de página
+        if (event.detail && event.detail.pageType) {
+            // Só inicializa se for explicitamente a página create-survey
+            if (event.detail.pageType === 'create-survey') {
+                console.log('[CreateSurvey] Evento pageContentUpdated para create-survey recebido. Reinicializando...');
+                checkEnvironmentReady();
+            }
+        } else {
+            // Verificação de segurança para eventos sem tipo específico
+            if (isCreateSurveyPage()) {
+                console.log('[CreateSurvey] Evento pageContentUpdated recebido. Verificando se estamos na página create-survey...');
+                checkEnvironmentReady();
+            }
+        }
+    }
+    
+    // Verificação adicional para garantir clicabilidade do calendário
+    function ensureCalendarClickability() {
+        if (!isCreateSurveyPage()) return;
+        
+        // Se o calendário já existir, verificar eventos
+        if (window.calendar) {
+            console.log('[CreateSurvey] Verificando se o calendário tem eventos de clique...');
+            
+            // Se o calendário já existe mas não tem handler de clique, configurá-lo
+            if (!window.calendar._handlers || !window.calendar._handlers.dateClick) {
+                console.log('[CreateSurvey] Adicionando handler de clique ao calendário existente');
+                window.calendar.setOption('dateClick', handleDateClick);
+            }
+            
+            // Se o calendário não tem handler de mudança de visualização, configurá-lo
+            if (!window.calendar._handlers || !window.calendar._handlers.datesSet) {
+                console.log('[CreateSurvey] Adicionando handler datesSet ao calendário existente');
+                window.calendar.setOption('datesSet', handleDatesSet);
+            }
+            
+            // Aplicar estilos visuais para datas selecionadas
+            applySelectedDatesVisuals();
+        }
+    }
+    
+    // Garantir eventos ao carregar a página
+    setTimeout(ensureCalendarClickability, 500);
+    setTimeout(applySelectedDatesVisuals, 500); // Aplicar estilos visuais após meio segundo
+    setTimeout(applySelectedDatesVisuals, 1000); // E novamente após um segundo para garantir
+    
     // Exportar função para janela global (uso em HTML)
     window.initializeCalendar = initializeCalendar;
+    window.checkEnvironmentReady = checkEnvironmentReady;
+    window.handleDateClick = handleDateClick; // Expor para possível uso direto
+    window.handleDatesSet = handleDatesSet; // Expor o handler de mudança de visualização
+    window.applySelectedDatesVisuals = applySelectedDatesVisuals; // Expor função para aplicar estilos
+    window.isPastDate = isPastDate; // Expor nossa função segura
     
     // Iniciar verificação quando o DOM estiver pronto
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkEnvironmentReady);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Só inicializa se estivermos na página de create-survey
+            if (isCreateSurveyPage()) {
+                checkEnvironmentReady();
+            }
+        });
     } else {
-        // DOM já está carregado, verificar dependências
-        checkEnvironmentReady();
+        // DOM já está carregado, verificar se estamos na página certa
+        if (isCreateSurveyPage()) {
+            checkEnvironmentReady();
+        }
     }
+    
+    // Adicionar ouvinte para o evento pageContentUpdated
+    document.removeEventListener('pageContentUpdated', handlePageContentUpdated); // Remove ouvintes duplicados
+    document.addEventListener('pageContentUpdated', handlePageContentUpdated);
 })();

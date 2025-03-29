@@ -7,101 +7,104 @@
  * @requires Utils/DOMUtils
  * @requires UI/Modals
  */
-window.GroupSesh = window.GroupSesh || {};
-GroupSesh.Dashboard = GroupSesh.Dashboard || {};
-
 (function() {
     'use strict';
 
+    // Garantir namespace
+    window.GroupSesh = window.GroupSesh || {};
+    window.GroupSesh.Dashboard = window.GroupSesh.Dashboard || {};
+
+    // Se já existir, não redefine
+    if (window.GroupSesh.Dashboard.CalendarManager) {
+        console.log('[CalendarManager] Já existente, usando versão atual.');
+        return;
+    }
+
     /**
-     * Gerenciamento do calendário do dashboard
-     * @namespace
+     * Gerenciamento do calendário do dashboard.
+     * Este módulo reinicializa o calendário sempre que for chamado,
+     * destruindo a instância anterior e criando uma nova a partir dos dados recebidos.
+     * Também mantém os contadores dos dias conforme os dados da database.
+     * @namespace CalendarManager
      */
     const CalendarManager = {
-        /**
-         * Instância do calendário
-         * @type {Object}
-         * @private
-         */
         _calendar: null,
-        
-        /**
-         * Dados das disponibilidades
-         * @type {Object}
-         * @private
-         */
         _availabilityData: null,
-        
+
         /**
-         * Inicializa o calendário
+         * Inicializa o calendário.
+         * Se já existir uma instância, ela é destruída antes de reinicializar.
          * @param {HTMLElement} element - Elemento do calendário
          * @returns {Object|null} Instância do calendário
          */
         init(element) {
             if (!element) {
-                console.error('Calendar element not found');
+                console.error('[CalendarManager] Elemento do calendário não encontrado.');
                 return null;
             }
-            
+
             try {
-                // Inicializar calendário vazio
+                // Se já existe uma instância, destrói-a
+                if (this._calendar) {
+                    console.log('[CalendarManager] Instância anterior encontrada. Destruindo...');
+                    this._calendar.destroy();
+                    this._calendar = null;
+                }
+                console.log('[CalendarManager] Inicializando o calendário...');
+                // Cria a instância do calendário utilizando a função initCalendar do DateUtils
                 this._calendar = GroupSesh.Utils.DateUtils.initCalendar(element);
-                
-                // Configurar navigation buttons
+                console.log('[CalendarManager] Calendário inicializado.');
+
+                // Configura os botões de navegação e o switch de destaque
                 this._setupNavigationButtons();
-                
-                // Configurar highlight switch
                 this._setupHighlightSwitch();
-                
+
                 return this._calendar;
             } catch (error) {
-                console.error('Error initializing calendar:', error);
+                console.error('[CalendarManager] Erro ao inicializar o calendário:', error);
                 return null;
             }
         },
-        
+
         /**
-         * Configura botões de navegação
+         * Configura os botões de navegação (prev, today, next).
          * @private
          */
         _setupNavigationButtons() {
             const DOMUtils = GroupSesh.Utils.DOMUtils;
-            
-            // Botão mês anterior
             const prevMonthBtn = DOMUtils.getElementById('prev-month-btn');
             if (prevMonthBtn) {
                 DOMUtils.addEventListener(prevMonthBtn, 'click', () => {
+                    console.log('[CalendarManager] Botão "mês anterior" clicado.');
                     if (this._calendar) this._calendar.prev();
                 });
             }
-            
-            // Botão hoje
             const todayBtn = DOMUtils.getElementById('today-btn');
             if (todayBtn) {
                 DOMUtils.addEventListener(todayBtn, 'click', () => {
+                    console.log('[CalendarManager] Botão "hoje" clicado.');
                     if (this._calendar) this._calendar.today();
                 });
             }
-            
-            // Botão próximo mês
             const nextMonthBtn = DOMUtils.getElementById('next-month-btn');
             if (nextMonthBtn) {
                 DOMUtils.addEventListener(nextMonthBtn, 'click', () => {
+                    console.log('[CalendarManager] Botão "próximo mês" clicado.');
                     if (this._calendar) this._calendar.next();
                 });
             }
         },
-        
+
         /**
-         * Configura switch de destaque
+         * Configura o switch de destaque no calendário (ex.: highlight-switch).
          * @private
          */
         _setupHighlightSwitch() {
             const DOMUtils = GroupSesh.Utils.DOMUtils;
             const highlightSwitch = DOMUtils.getElementById('highlight-switch');
-            
             if (highlightSwitch) {
                 DOMUtils.addEventListener(highlightSwitch, 'change', () => {
+                    console.log('[CalendarManager] Switch de destaque alterado:', highlightSwitch.checked);
                     const dayElements = document.querySelectorAll('.highlight-participants');
                     dayElements.forEach(el => {
                         if (highlightSwitch.checked) {
@@ -113,38 +116,34 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
                 });
             }
         },
-        
+
         /**
-         * Atualiza o calendário com dados de disponibilidade
-         * @param {Object} data - Dados de disponibilidade
-         * @param {Function} participantClickHandler - Handler para clique em data com participantes
+         * Atualiza o calendário com os dados de disponibilidade.
+         * Reinicializa os eventos, exibindo os contadores nos dias correspondentes.
+         * @param {Object} data - Dados de disponibilidade da survey (deve conter availability_by_date e participantes)
+         * @param {Function} participantClickHandler - Callback para clique em data com participantes
          */
         updateWithData(data, participantClickHandler) {
             if (!this._calendar) {
-                console.warn('Calendar not initialized, cannot update with data');
+                console.warn('[CalendarManager] Calendário não inicializado. Não é possível atualizar os dados.');
                 return;
             }
-            
             if (!data || !data.availability_by_date) {
-                console.warn('Invalid availability data provided');
+                console.warn('[CalendarManager] Dados de disponibilidade inválidos.');
                 return;
             }
-            
             try {
-                // Armazenar dados para referência posterior
+                console.log('[CalendarManager] Atualizando calendário com novos dados...');
+                // Armazena os dados para referência futura
                 this._availabilityData = data;
-                
-                // Limpar eventos existentes
+                // Remove todos os eventos atuais
                 this._calendar.removeAllEvents();
-                
-                // Preparar eventos
                 const events = [];
-                
-                // Para cada data com participantes
+
+                // Para cada data, cria um evento de fundo que inclui o contador
                 for (const dateStr in data.availability_by_date) {
                     if (Object.prototype.hasOwnProperty.call(data.availability_by_date, dateStr)) {
                         const participants = data.availability_by_date[dateStr];
-                        
                         if (Array.isArray(participants) && participants.length > 0) {
                             events.push({
                                 start: dateStr,
@@ -158,54 +157,49 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
                         }
                     }
                 }
-                
-                // Adicionar eventos
+                console.log('[CalendarManager] Eventos a adicionar:', events);
                 this._calendar.addEventSource(events);
-                
-                // Configurar click handler
+
+                // Configura o handler para clique nas datas
                 this._calendar.setOption('dateClick', (info) => {
                     const dateStr = info.dateStr;
                     const participants = data.availability_by_date[dateStr] || [];
-                    
+                    console.log(`[CalendarManager] Data clicada: ${dateStr}, participantes:`, participants);
                     if (participants.length > 0 && typeof participantClickHandler === 'function') {
                         participantClickHandler(dateStr, participants);
                     }
                 });
-                
-                // Configurar renderização de eventos
+
+                // Configura a renderização dos eventos para exibir os contadores
                 this._calendar.setOption('eventDidMount', (info) => {
                     if (info.event.extendedProps?.count) {
                         const count = info.event.extendedProps.count;
                         const dayElement = info.el.closest('.fc-daygrid-day');
-                        
                         if (!dayElement) return;
-                        
-                        // Adicionar classe para styling
                         dayElement.classList.add('fc-day-has-participants');
-                        
-                        // Adicionar contador
                         const dayFrame = info.el.closest('.fc-daygrid-day-frame');
                         if (dayFrame) {
-                            const countEl = GroupSesh.Utils.DOMUtils.createElement('div', {
-                                className: 'participant-count'
-                            }, count.toString());
-                            
-                            dayFrame.appendChild(countEl);
+                            let countEl = dayFrame.querySelector('.participant-count');
+                            if (!countEl) {
+                                countEl = GroupSesh.Utils.DOMUtils.createElement('div', {
+                                    className: 'participant-count'
+                                }, count.toString());
+                                dayFrame.appendChild(countEl);
+                            } else {
+                                countEl.textContent = count.toString();
+                            }
                         }
-                        
-                        // Configurar destaque condicional
                         dayElement.classList.add('highlight-participants');
-                        
-                        // Categorizar por número de participantes
-                        let category = count >= 5 ? '5+' : count.toString();
+                        const category = count >= 5 ? '5+' : count.toString();
                         dayElement.setAttribute('data-count', category);
                     }
                 });
-                
-                // Renderizar para aplicar as alterações
+
+                // Renderiza o calendário (chama render para aplicar as alterações)
                 this._calendar.render();
-                
-                // Aplicar destaque se estiver ativado
+                console.log('[CalendarManager] Calendário atualizado e renderizado.');
+
+                // Se o switch de destaque estiver ativo, garante que os dias marcados fiquem com a classe "active"
                 const highlightSwitch = GroupSesh.Utils.DOMUtils.getElementById('highlight-switch');
                 if (highlightSwitch && highlightSwitch.checked) {
                     setTimeout(() => {
@@ -214,55 +208,45 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
                         });
                     }, 100);
                 }
-                
-                // Notificar sistema de eventos que o calendário foi atualizado
+
+                // Notifica outros módulos que o calendário foi atualizado
                 GroupSesh.Core.Events.publish('calendar:updated', events.length);
-                
                 return true;
             } catch (error) {
-                console.error('Error updating calendar with data:', error);
+                console.error('[CalendarManager] Erro ao atualizar o calendário com dados:', error);
                 return false;
             }
         },
-        
+
         /**
-         * Obtém dados de participantes para uma data específica
+         * Obtém os participantes para uma data específica.
          * @param {string} dateStr - Data ISO
-         * @returns {Array} Array de participantes ou array vazio
+         * @returns {Array} Array de participantes ou vazio
          */
         getParticipantsForDate(dateStr) {
             if (!this._availabilityData || !this._availabilityData.availability_by_date) {
                 return [];
             }
-            
             return this._availabilityData.availability_by_date[dateStr] || [];
         },
-        
+
         /**
-         * Obtém as datas disponíveis com mais participantes
+         * Obtém as datas com mais participantes.
          * @param {number} [limit=3] - Número máximo de datas para retornar
-         * @returns {Array} Array de objetos {date, count, percentage}
+         * @returns {Array} Array de objetos {date, count, percentage, participants}
          */
         getBestDates(limit = 3) {
             if (!this._availabilityData || !this._availabilityData.availability_by_date) {
                 return [];
             }
-            
-            // Extrair datas e contagens
             const dateCountPairs = Object.entries(this._availabilityData.availability_by_date)
                 .map(([date, participants]) => ({
                     date,
                     count: Array.isArray(participants) ? participants.length : 0,
                     participants: Array.isArray(participants) ? participants : []
                 }));
-            
-            // Ordenar por contagem (decrescente)
             dateCountPairs.sort((a, b) => b.count - a.count);
-            
-            // Calcular porcentagem baseada no total de participantes
             const totalParticipants = Object.keys(this._availabilityData.participants || {}).length;
-            
-            // Limitar e retornar as melhores datas
             return dateCountPairs.slice(0, limit).map(item => ({
                 date: item.date,
                 count: item.count,
@@ -270,20 +254,33 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
                 participants: item.participants
             }));
         },
-        
+
         /**
-         * Destrói a instância do calendário e limpa recursos
+         * Destrói a instância do calendário e limpa os dados.
          */
         destroy() {
             if (this._calendar) {
+                console.log('[CalendarManager] Destruindo instância do calendário.');
                 this._calendar.destroy();
                 this._calendar = null;
             }
-            
             this._availabilityData = null;
         }
     };
-    
-    // Exportar o módulo
-    GroupSesh.Dashboard.CalendarManager = CalendarManager;
+
+    // Ouvinte para o evento customizado 'reinitializeCalendar'
+    document.addEventListener('reinitializeCalendar', function() {
+        console.log('[CalendarManager] Evento reinitializeCalendar recebido.');
+        const calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            console.log('[CalendarManager] Elemento do calendário encontrado. Reinicializando...');
+            CalendarManager.init(calendarEl);
+        } else {
+            console.warn('[CalendarManager] Nenhum elemento de calendário encontrado para reinicialização.');
+        }
+    });
+
+    // Exporta o módulo para o namespace global
+    window.GroupSesh.Dashboard.CalendarManager = CalendarManager;
+    console.log('[CalendarManager] Calendar Manager inicializado com sucesso.');
 })();

@@ -7,38 +7,31 @@
  * @requires Utils/DOMUtils
  * @requires UI/Modals
  */
-window.GroupSesh = window.GroupSesh || {};
-GroupSesh.Dashboard = GroupSesh.Dashboard || {};
-
 (function() {
     'use strict';
 
+    // Garantir namespace
+    window.GroupSesh = window.GroupSesh || {};
+    window.GroupSesh.Dashboard = window.GroupSesh.Dashboard || {};
+
+    // Se já existir, não redefine
+    if (window.GroupSesh.Dashboard.ParticipantList) {
+        console.log('GroupSesh.Dashboard.ParticipantList já existente, usando versão atual');
+        return;
+    }
+
     /**
      * Gerenciamento da lista de participantes
-     * @namespace
+     * @namespace ParticipantList
      */
     const ParticipantList = {
-        /**
-         * Dados dos participantes
-         * @type {Object}
-         * @private
-         */
+        // ================================
+        // Propriedades privadas
+        // ================================
         _participantsData: null,
-        
-        /**
-         * Filtro atual
-         * @type {string}
-         * @private
-         */
         _currentFilter: '',
-        
-        /**
-         * Container da lista
-         * @type {HTMLElement}
-         * @private
-         */
         _listContainer: null,
-        
+
         /**
          * Inicializa o gerenciador de participantes
          * @param {HTMLElement} container - Container da lista
@@ -157,9 +150,9 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
                 });
                 
                 const messageP = DOMUtils.createElement('p', {}, 
-                    isEnglish ? 
-                    `No participant found with the term "${this._currentFilter}".` : 
-                    `Nenhum participante encontrado com o termo "${this._currentFilter}".`
+                    isEnglish 
+                    ? `No participant found with the term "${this._currentFilter}".`
+                    : `Nenhum participante encontrado com o termo "${this._currentFilter}".`
                 );
                 
                 messageDiv.appendChild(messageP);
@@ -210,8 +203,9 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
             const name = participant.name || 'Nome indisponível';
             const email = participant.email || 'Email indisponível';
             const createdAt = participant.created_at || new Date().toISOString();
-            const datesCount = Array.isArray(participant.availability_dates) ? 
-                              participant.availability_dates.length : 0;
+            const datesCount = Array.isArray(participant.availability_dates)
+                               ? participant.availability_dates.length
+                               : 0;
             const isAdmin = !!participant.is_admin;
             
             // Criar item
@@ -234,7 +228,6 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
                 const adminBadge = DOMUtils.createElement('span', {
                     className: 'admin-badge'
                 }, 'Admin');
-                
                 nameHeading.appendChild(adminBadge);
             }
             
@@ -253,9 +246,11 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
             // Contagem de dias disponíveis
             const daysSmall = DOMUtils.createElement('small', {
                 className: 'text-muted'
-            }, `${datesCount} ${datesCount === 1 ? 
-                (isEnglish ? 'day available' : 'dia disponível') : 
-                (isEnglish ? 'days available' : 'dias disponíveis')}`);
+            }, `${datesCount} ${
+                datesCount === 1
+                ? (isEnglish ? 'day available' : 'dia disponível')
+                : (isEnglish ? 'days available' : 'dias disponíveis')
+            }`);
             
             // Montar item
             item.appendChild(header);
@@ -323,4 +318,5 @@ GroupSesh.Dashboard = GroupSesh.Dashboard || {};
     
     // Exportar o módulo
     GroupSesh.Dashboard.ParticipantList = ParticipantList;
+    console.log('Participant List inicializado com sucesso');
 })();

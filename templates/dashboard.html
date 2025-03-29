@@ -10,9 +10,10 @@
 
 {% block content %}
 {% if is_expired %}
-{% include 'dashboard/components/expired_notice.html' %}
+    {% include 'dashboard/components/expired_notice.html' %}
 {% endif %}
-<!-- Adicionar no topo do dashboard.html -->
+
+<!-- Exemplo de mensagem se o usuário for o dono -->
 {% if current_user.is_authenticated and (survey.creator_id == current_user.id or survey.admin_email.lower() == current_user.email.lower()) %}
     <div class="alert alert-success mb-4">
         <i class="bi bi-check-circle me-2"></i>
@@ -24,6 +25,7 @@
         {{ _('Você está visualizando a pesquisa criada por') }} <strong>{{ survey.admin_name }}</strong>.
     </div>
 {% endif %}
+
 <div class="row justify-content-center">
     <div class="col-lg-12">
         <div class="card shadow-sm mb-4">
@@ -31,7 +33,7 @@
             <div class="card-body">
                 <div class="row">
                     {% include 'dashboard/components/dashboard_sidebar.html' %}
-                    {% include 'dashboard/components/dashboard_main_content.html' %}
+                    {% include 'dashboard/components/dash_main_content.html' %}
                 </div>
             </div>
         </div>
@@ -43,4 +45,37 @@
 
 {% block extra_js %}
 {% include 'dashboard/components/dashboard_scripts.html' %}
+
+<!-- Exemplo: se quiser Chart.js aqui -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<!-- Carrega o dashboard.js final, que depende de todos os módulos (já carregados em base.html) -->
+<script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
+
+<script>
+    // Config para inicializar o dashboard
+    window.DASHBOARD_CONFIG = {
+        survey: {
+            id: {{ survey.id }},
+            token: "{{ survey.token }}",
+            title: "{{ survey.title|e }}",
+            admin_email: "{{ survey.admin_email|e }}",
+            admin_name: "{{ survey.admin_name|e }}",
+            created_at: "{{ survey.created_at }}",
+            expires_at: "{{ survey.expires_at }}"
+        },
+        language: "{{ language_code }}",
+        paths: {
+            survey_info: "/api/survey-info/{{ survey.token }}",
+            survey_data: "/api/survey-data/{{ survey.token }}"
+        }
+    };
+    
+    // Garantir init se precisar
+    document.addEventListener('pageContentUpdated', function() {
+        if (typeof window.initDashboard === 'function') {
+            window.initDashboard();
+        }
+    });
+</script>
 {% endblock %}

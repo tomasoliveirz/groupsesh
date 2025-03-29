@@ -4,11 +4,18 @@
  * @requires Core/Base
  * @requires Utils/DOMUtils
  */
-window.GroupSesh = window.GroupSesh || {};
-GroupSesh.UI = GroupSesh.UI || {};
-
 (function() {
     'use strict';
+
+    // Garantir namespace
+    window.GroupSesh = window.GroupSesh || {};
+    window.GroupSesh.UI = window.GroupSesh.UI || {};
+
+    // Evitar redefinição caso já exista
+    if (window.GroupSesh.UI.Modals) {
+        console.log('GroupSesh.UI.Modals já existente, utilizando versão atual');
+        return;
+    }
 
     /**
      * Gerenciador de modais Bootstrap
@@ -211,5 +218,7 @@ GroupSesh.UI = GroupSesh.UI || {};
     };
     
     // Exportar o módulo
-    GroupSesh.UI.Modals = Modals;
+    window.GroupSesh.UI.Modals = Modals;
+
+    console.log('UI Modals inicializado com sucesso');
 })();

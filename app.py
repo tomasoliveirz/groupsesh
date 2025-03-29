@@ -1,72 +1,80 @@
-# No início do arquivo app.py (linha 11), adicione/modifique a importação:
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, abort, session, g
+import os
+import json
+import base64
+import logging
+from datetime import datetime, timedelta
+
+from flask import (
+    Flask, request, jsonify, render_template, redirect,
+    url_for, flash, abort, session, g
+)
 from flask_wtf.csrf import CSRFProtect
 from flask_cors import CORS
-from datetime import datetime, timedelta
-import json
-import os
-import sys
-import logging
-import base64
-from werkzeug.security import generate_password_hash, check_password_hash
-from translations.config import init_babel, LANGUAGES, DEFAULT_LANGUAGE, _, _l
 from flask_babel import lazy_gettext as _l
-from config import selected_config as Config
-from flask_login import current_user, login_required  # Adicione login_required aqui
+from flask_login import current_user, login_required
+from werkzeug.security import generate_password_hash, check_password_hash
 
-# Initialize application with absolute path to instance
+# Importar traduções e configuração
+from translations.config import init_babel, LANGUAGES, DEFAULT_LANGUAGE, _, _l
+from config import selected_config as Config
+
+# 1) Importar blueprint do perfil (profile_bp) do seu pacote 'profiles'
+#    Assegure-se de que em 'profiles/__init__.py' você exporta o profile_bp:
+#    from .routes import profile_bp
+from profiles import profile_bp
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_path = os.path.join(basedir, 'instance')
 
-app = Flask(__name__, 
-            instance_path=instance_path,
-            instance_relative_config=True)
+app = Flask(
+    __name__,
+    instance_path=instance_path,
+    instance_relative_config=True
+)
 
-# Apply configurations from Config object
+# 2) Registrar o blueprint APENAS UMA VEZ, aqui:
+app.register_blueprint(profile_bp)
+
+# Aplicar configurações
 app.config.from_object(Config)
 
-# Configuração de logging
+# Configurar logging
 logging.basicConfig(
     level=logging.DEBUG if app.config.get('DEBUG', False) else logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Ensure instance directory exists with proper permissions
+# Garantir diretório de instância
 try:
     if not os.path.exists(app.instance_path):
         os.makedirs(app.instance_path, exist_ok=True)
-        os.chmod(app.instance_path, 0o777)  # Wide permissions for development
-    
+        os.chmod(app.instance_path, 0o777)
     logger.info(f"Instance path: {app.instance_path}")
 except OSError as e:
     logger.error(f"Error setting up instance directory: {e}")
 
-# Security configuration
+# Segurança
 csrf = CSRFProtect(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# Initialize internationalization
+# Internacionalização
 babel = init_babel(app)
 
-# Now import database modules
+# Inicializar DB e modelos
 from database import db, init_app
 from database.models import Survey, Participant, Availability, User
-
-# Initialize database
 init_app(app)
 
-# Initialize authentication
+# Inicializar autenticação (Blueprint de auth, por exemplo)
 from auth import init_app as init_auth
 init_auth(app)
-from profiles import profile_bp
-app.register_blueprint(profile_bp)
-# Middleware to process language prefix in URL
+
+# Middlewares para processar código de idioma na URL
 @app.url_value_preprocessor
 def pull_lang_code(endpoint, values):
     if values is not None:
         g.lang_code = values.pop('lang_code', DEFAULT_LANGUAGE)
-        # Store language in session for persistence
         session['language'] = g.lang_code
 
 @app.url_defaults
@@ -77,18 +85,15 @@ def set_language_code(endpoint, values):
         if app.url_map.is_endpoint_expecting(endpoint, 'lang_code'):
             values['lang_code'] = g.lang_code
     except KeyError:
-        # Se o endpoint não existe no mapa, simplesmente ignoramos
         pass
 
-# Redirect to URL with language
+# Redirecionar para URL com linguagem
 @app.route('/')
 def home():
     lang_code = request.accept_languages.best_match(LANGUAGES.keys()) or DEFAULT_LANGUAGE
-    # Store language in session
     session['language'] = lang_code
     return redirect(url_for('index', lang_code=lang_code))
 
-# Routes for pages
 @app.route('/<lang_code>/')
 def index():
     """Página inicial"""
@@ -96,7 +101,7 @@ def index():
 
 @app.route('/<lang_code>/survey/<token>')
 def join_survey_page(token):
-    """Página de participação na survey"""
+    """Página para participar de uma survey"""
     survey = Survey.get_by_token(token)
     if not survey:
         flash(_('Survey não encontrada'), 'error')
@@ -105,52 +110,44 @@ def join_survey_page(token):
     if survey.is_expired:
         flash(_('Esta survey está expirada e não aceita mais respostas'), 'warning')
     
-    # Sempre permitimos visualizar a survey, mesmo se expirada
     return render_template('join_survey.html', survey=survey)
+
 @app.route('/<lang_code>/dashboard/<token>')
 def dashboard_page(token):
-    """Dashboard do administrador"""
+    """Página de Dashboard para administrador"""
     survey = Survey.get_by_token(token)
     if not survey:
         flash(_('Survey não encontrada'), 'error')
         return redirect(url_for('index', lang_code=g.lang_code))
     
-    # Verificar propriedade
     is_owner = False
     if current_user.is_authenticated:
-        is_owner = (survey.creator_id == current_user.id or 
-                   survey.admin_email.lower() == current_user.email.lower())
+        is_owner = (survey.creator_id == current_user.id or
+                    survey.admin_email.lower() == current_user.email.lower())
     
-    # Se não for o proprietário, verificar via método alternativo
     if not is_owner and not session.get(f'admin_verified_{token}', False):
         return redirect(url_for('verify_admin_page', token=token, lang_code=g.lang_code))
     
-    # Verificar se está expirada
     is_expired = survey.is_expired
-    
-    # Passar parâmetros para o template
     language_code = g.lang_code
     
-    return render_template('dashboard.html', 
-                          survey=survey, 
-                          is_expired=is_expired,
-                          is_owner=is_owner,
-                          language_code=language_code)
+    return render_template('dashboard.html',
+                           survey=survey,
+                           is_expired=is_expired,
+                           is_owner=is_owner,
+                           language_code=language_code)
 
 @app.route('/<lang_code>/about')
 def about_page():
-    """Página sobre"""
+    """Página 'sobre'"""
     return render_template('about.html')
 
-
-
-# Adicionar em app.py dentro da função context_processor
 @app.context_processor
 def utility_processor():
     def get_current_year():
         return datetime.now().year
     
-    # Adicionar variável para verificar se o Google OAuth está habilitado
+    # Verificar se Google OAuth está habilitado
     from auth.oauth import google_enabled
     
     return dict(
@@ -159,11 +156,6 @@ def utility_processor():
         languages=LANGUAGES
     )
 
-# Modificar em app.py
-from flask_login import login_required, current_user
-
-
-# MANTER APENAS ESTA VERSÃO
 @app.route('/<lang_code>/create-survey')
 @login_required
 def create_survey_page():
@@ -173,38 +165,27 @@ def create_survey_page():
 @app.route('/api/create-survey', methods=['POST'])
 @login_required
 def create_survey():
-    """Cria uma nova survey usando os dados do usuário autenticado"""
+    """Cria uma nova Survey"""
     data = request.json
-    
-    # Validação básica (apenas título é obrigatório)
     if not data.get('title'):
         return jsonify({'error': _('O título da pesquisa é obrigatório')}), 400
     
-    # Ignorar o email fornecido no formulário, usar SEMPRE o email do usuário logado
-    # Isso evita problemas de segurança onde um usuário poderia tentar criar surveys como outro
     admin_email = current_user.email.lower().strip()
-    
-    # Usar o nome fornecido ou o nome do usuário como fallback
     admin_name = data.get('admin_name', '').strip() or current_user.name
-    
-    # Calcular data de expiração
     expires_at = datetime.utcnow() + timedelta(days=app.config['SURVEY_LINK_EXPIRY'])
     
-    # Criar survey
     try:
         survey = Survey(
             title=data['title'],
             description=data.get('description', ''),
-            admin_email=admin_email,  # Sempre usar o email do usuário logado
+            admin_email=admin_email,
             admin_name=admin_name,
             expires_at=expires_at,
-            creator_id=current_user.id  # Associar ao usuário atual
+            creator_id=current_user.id
         )
-        
         db.session.add(survey)
         db.session.commit()
         
-        # Código para resposta permanece igual
         lang_code = g.get('lang_code', DEFAULT_LANGUAGE)
         
         return jsonify({
@@ -213,17 +194,15 @@ def create_survey():
             'admin_url': url_for('dashboard_page', token=survey.token, lang_code=lang_code, _external=True),
             'participant_url': url_for('join_survey_page', token=survey.token, lang_code=lang_code, _external=True)
         }), 201
-        
+    
     except Exception as e:
         db.session.rollback()
         logger.error(f"Erro ao criar survey: {str(e)}", exc_info=True)
         return jsonify({'error': _('Erro ao criar survey')}), 500
-    
-    
 
 @app.route('/api/join-survey/<token>', methods=['POST'])
 def join_survey(token):
-    """Registra ou atualiza a disponibilidade de um participante"""
+    """Registra/atualiza disponibilidade do participante."""
     survey = Survey.get_by_token(token)
     if not survey:
         return jsonify({'error': _('Survey não encontrada')}), 404
@@ -232,39 +211,26 @@ def join_survey(token):
         return jsonify({'error': _('Survey expirada')}), 400
     
     data = request.json
-    
-    # Validação básica
     required_fields = ['name', 'email', 'availability_dates']
     for field in required_fields:
         if field not in data or not data[field]:
             return jsonify({'error': _('Campo obrigatório ausente: {}').format(field)}), 400
     
-    # Normalizar email (converter para minúsculas)
     email = data['email'].lower().strip()
-    
-    # Verificar se é o administrador da survey
     is_admin = (email == survey.admin_email.lower())
-    
-    # Verificar se o usuário atual está logado
     user_id = current_user.id if current_user.is_authenticated else None
     
-    # Verificar se o usuário já respondeu
+    from database.models import Participant, Availability
     existing_participant = Participant.get_by_survey_and_email(survey.id, email)
     
-    # Atualizações para resposta existente ou nova participação
     try:
         if existing_participant:
-            # Se já respondeu, atualizar os dados
             existing_participant.name = data['name']
             existing_participant.user_id = user_id
-            
-            # Remover disponibilidades antigas
             Availability.query.filter_by(participant_id=existing_participant.id).delete()
-            
             participant = existing_participant
             is_update = True
         else:
-            # Criar novo participante
             participant = Participant(
                 survey_id=survey.id,
                 name=data['name'],
@@ -273,27 +239,21 @@ def join_survey(token):
                 user_id=user_id
             )
             db.session.add(participant)
-            db.session.flush()  # Para obter o ID gerado
+            db.session.flush()
             is_update = False
         
-        # Adicionar novas disponibilidades
         for date_str in data['availability_dates']:
             try:
-                # Converter string para data
                 date_obj = datetime.fromisoformat(date_str).date()
-                
                 availability = Availability(
                     participant_id=participant.id,
                     available_date=date_obj
                 )
                 db.session.add(availability)
             except ValueError:
-                # Ignorar datas inválidas
-                continue
+                pass
         
         db.session.commit()
-        
-        # Log das disponibilidades para monitoramento
         logger.info(f"Participante {participant.id} ({participant.email}) registrou {len(data['availability_dates'])} disponibilidades")
         
         return jsonify({
@@ -302,7 +262,7 @@ def join_survey(token):
             'is_admin': is_admin,
             'is_update': is_update
         }), 200
-        
+    
     except Exception as e:
         db.session.rollback()
         logger.error(f"Erro ao registrar disponibilidade: {str(e)}", exc_info=True)
@@ -310,12 +270,9 @@ def join_survey(token):
 
 @app.route('/api/survey-info/<token>', methods=['GET'])
 def get_survey_info(token):
-    """Obtém informações básicas da survey"""
     survey = Survey.get_by_token(token)
     if not survey:
         return jsonify({'error': _('Survey não encontrada')}), 404
-    
-    # Retornar apenas informações básicas (não inclui participantes)
     return jsonify({
         'id': survey.id,
         'token': survey.token,
@@ -330,7 +287,6 @@ def get_survey_info(token):
 
 @app.route('/api/participant-response/<token>', methods=['GET'])
 def get_participant_response(token):
-    """Obtém a resposta de um participante específico"""
     survey = Survey.get_by_token(token)
     if not survey:
         return jsonify({'error': _('Survey não encontrada')}), 404
@@ -339,104 +295,77 @@ def get_participant_response(token):
     if not email:
         return jsonify({'error': _('Email não fornecido')}), 400
     
-    # Buscar participante
+    from database.models import Participant
     participant = Participant.get_by_survey_and_email(survey.id, email)
     if not participant:
         return jsonify({'participant': None}), 200
     
-    # Verificar se é o administrador
     is_admin = (email == survey.admin_email.lower())
-    
-    return jsonify({
-        'participant': participant.to_dict(),
-        'is_admin': is_admin
-    }), 200
+    return jsonify({'participant': participant.to_dict(), 'is_admin': is_admin}), 200
 
 @app.template_filter('date_format')
 def date_format_filter(date_input, include_time=True):
-    """Formata datas ISO para exibição, suportando tanto strings ISO quanto objetos datetime"""
     if not date_input:
         return ""
-    
     try:
-        # Se já for um objeto datetime, use-o diretamente
         if isinstance(date_input, datetime):
             date_obj = date_input
-        # Se for uma string, tente converter para datetime
         elif isinstance(date_input, str):
             date_obj = datetime.fromisoformat(date_input.replace('Z', '+00:00'))
         else:
-            # Caso seja outro tipo, tente converter para string e depois para datetime
             date_str = str(date_input)
             date_obj = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         
-        # Formata de acordo com o parâmetro include_time
         if include_time:
             return date_obj.strftime('%d/%m/%Y %H:%M')
         else:
             return date_obj.strftime('%d/%m/%Y')
     except (ValueError, AttributeError, TypeError) as e:
-        # Em caso de falha, registra o erro e retorna a entrada original como string
         logger.warning(f"Error formatting date '{date_input}' (type: {type(date_input).__name__}): {e}")
         return str(date_input)
-    
-    
-@app.route('/<lang_code>/verify-admin/<token>', methods=['GET', 'POST'])
+
+@app.route('/<lang_code>/verify-admin/<token>', methods=['GET','POST'])
 def verify_admin_page(token):
-    """Página para verificar se o usuário é o administrador da survey"""
     survey = Survey.get_by_token(token)
     if not survey:
         flash(_('Survey não encontrada'), 'error')
         return redirect(url_for('index', lang_code=g.lang_code))
     
-    # Se já está autenticado e é o proprietário, redireciona para o dashboard
     if current_user.is_authenticated:
         if survey.creator_id == current_user.id or survey.admin_email.lower() == current_user.email.lower():
             return redirect(url_for('dashboard_page', token=token, lang_code=g.lang_code))
     
     if request.method == 'POST':
         email = request.form.get('email', '').lower().strip()
-        
-        # Verificar se o email corresponde ao admin
         if email == survey.admin_email.lower():
-            # Marcar como verificado na sessão
             session[f'admin_verified_{token}'] = True
             return redirect(url_for('dashboard_page', token=token, lang_code=g.lang_code))
         else:
             flash(_('Email incorreto. Você precisa usar o email do administrador.'), 'danger')
-    
     return render_template('verify_admin.html', survey=survey)
 
 @app.route('/api/survey-data/<token>', methods=['GET'])
 def get_survey_data(token):
-    """Obtém os dados da survey para o dashboard"""
     survey = Survey.get_by_token(token)
     if not survey:
         return jsonify({'error': _('Survey não encontrada')}), 404
     
-    # Carregar participantes e suas disponibilidades
+    from database.models import Participant
     participants = Participant.query.filter_by(survey_id=survey.id).all()
-    
-    # Criar estrutura de dados para o dashboard
-    # 1. Dicionário de participantes
     participants_dict = {p.id: p.to_dict() for p in participants}
     
-    # 2. Disponibilidades por data
     availabilities_by_date = {}
-    
     for participant in participants:
         for availability in participant.availabilities:
             date_str = availability.available_date.isoformat()
             if date_str not in availabilities_by_date:
                 availabilities_by_date[date_str] = []
-            
             availabilities_by_date[date_str].append({
                 'participant_id': participant.id,
                 'name': participant.name,
                 'email': participant.email
             })
     
-    # 3. Estatísticas extras
     stats = {
         'total_participants': len(participants),
         'total_dates': len(availabilities_by_date),
@@ -444,14 +373,11 @@ def get_survey_data(token):
         'participants_by_date_count': {}
     }
     
-    # Encontrar as datas com mais participantes
     best_date = None
     max_participants = 0
-    
-    for date_str, participants_list in availabilities_by_date.items():
-        count = len(participants_list)
+    for date_str, plist in availabilities_by_date.items():
+        count = len(plist)
         stats['participants_by_date_count'][count] = stats['participants_by_date_count'].get(count, 0) + 1
-        
         if count > max_participants:
             max_participants = count
             best_date = date_str
@@ -473,55 +399,35 @@ def get_survey_data(token):
 
 @app.route('/api/user-info', methods=['GET'])
 def get_user_info():
-    """Retorna informações sobre o usuário atual (se autenticado)"""
     if current_user.is_authenticated:
-        return jsonify({
-            'authenticated': True,
-            'user': current_user.to_dict()
-        }), 200
+        return jsonify({'authenticated': True, 'user': current_user.to_dict()}), 200
     else:
-        return jsonify({
-            'authenticated': False
-        }), 200
+        return jsonify({'authenticated': False}), 200
 
 def generate_admin_token(survey_id, email):
-    """Gera um token temporário para autenticação do admin"""
     expiry = datetime.utcnow() + timedelta(hours=24)
-    data = {
-        'survey_id': survey_id,
-        'email': email,
-        'exp': expiry.timestamp()
-    }
-    
-    # Em produção, usar um algoritmo de assinatura como JWT
-    # Para simplificar, usamos uma string codificada em base64
+    data = {'survey_id': survey_id, 'email': email, 'exp': expiry.timestamp()}
     token_data = json.dumps(data).encode('utf-8')
     token = base64.urlsafe_b64encode(token_data).decode('utf-8')
-    
     return token
 
 @app.errorhandler(404)
 def page_not_found(e):
-    """Tratamento de erro 404"""
     lang_code = g.get('lang_code', DEFAULT_LANGUAGE)
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(e):
-    """Tratamento de erro 500"""
     lang_code = g.get('lang_code', DEFAULT_LANGUAGE)
     logger.error(f"Erro 500: {str(e)}", exc_info=True)
     return render_template('500.html'), 500
 
-# Registrar função auxiliar para templates
 @app.context_processor
-def utility_processor():
+def extra_utility_processor():
     def get_current_year():
         return datetime.now().year
-    
     return dict(current_year=get_current_year)
 
 if __name__ == '__main__':
-    # Em produção, usar um servidor WSGI como gunicorn
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=app.config.get('DEBUG', False))

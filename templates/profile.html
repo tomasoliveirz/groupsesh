@@ -91,7 +91,7 @@
                 <h2 class="h5 mb-0">{{ _('Alterar Senha') }}</h2>
             </div>
             <div class="card-body">
-                <form id="password-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                <form id="password-form" method="POST" action="{{ url_for('profile_bp.profile', lang_code=language_code) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="form_type" value="password">
                     
@@ -145,7 +145,7 @@
             <div class="card-body">
                 <p>{{ _('Defina uma senha para poder acessar sua conta com email e senha.') }}</p>
                 
-                <form id="set-password-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                <form id="set-password-form" method="POST" action="{{ url_for('profile_bp.profile', lang_code=language_code) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="form_type" value="set_password">
                     
@@ -228,7 +228,7 @@
             <div class="modal-body">
                 <p>{{ _('Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita.') }}</p>
                 
-                <form id="delete-account-form" method="POST" action="{{ url_for('profile_page', lang_code=language_code) }}">
+                <form id="delete-account-form" method="POST" action="{{ url_for('profile_bp.profile', lang_code=language_code) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="form_type" value="delete_account">
                     
