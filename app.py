@@ -428,6 +428,8 @@ def extra_utility_processor():
         return datetime.now().year
     return dict(current_year=get_current_year)
 
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=app.config.get('DEBUG', False))
+    host = os.environ.get('HOST', '0.0.0.0')  # Usar 0.0.0.0 para permitir conexões externas
+    app.run(host=host, port=port, debug=app.config.get('DEBUG', False))

@@ -1,10 +1,14 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente de .env se existir
+load_dotenv()
 
 class Config:
     # Configurações básicas
     SECRET_KEY = os.environ.get('SECRET_KEY', 'sua-chave-secreta-aqui')
-    DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+    DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
     
     # Configurações do banco de dados
     # Primeiro checamos por DATABASE_URL (Render/Heroku) e ajustamos para postgres/postgresql se necessário
@@ -14,7 +18,7 @@ class Config:
         SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
         # SQLite como fallback
-        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///instance/groupsesh.db')
+        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///instance/availability_survey.db')
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
@@ -28,17 +32,17 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
     
     # Configurações de segurança
-    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1', 't')
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
     # Configurações do sistema de emails
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.example.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
-    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'username')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'password')
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@groupsesh.com')
     
     # Configurações específicas do GroupSesh
@@ -80,7 +84,9 @@ class RenderConfig(ProductionConfig):
         
         # Configurar para usar o gunicorn em produção
         from werkzeug.middleware.proxy_fix import ProxyFix
-        app.wsgi_app = ProxyFix(app.wsgi_app)
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+        )
         
         # Garantir diretório de sessão (para SESSION_TYPE = 'filesystem')
         import os
@@ -91,7 +97,7 @@ class RenderConfig(ProductionConfig):
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
-    'render': RenderConfig,  # Nova configuração para Render
+    'render': RenderConfig,
     'default': DevelopmentConfig
 }
 
