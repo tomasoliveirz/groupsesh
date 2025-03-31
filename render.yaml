@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: groupsesh
+    runtime: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn -c gunicorn_config.py wsgi:app
+    envVars:
+      - key: FLASK_CONFIG
+        value: render
+      - key: RENDER
+        value: true
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///instance/availability_survey.db
+    buildFilter:
+      paths:
+        - requirements.txt
+        - '**/*.py'
+        - templates/**
+        - static/**
+        - build.sh
+        - gunicorn_config.py
