@@ -7,7 +7,15 @@ class Config:
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     # Configurações do banco de dados
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///instance/groupsesh.db')
+    # Primeiro checamos por DATABASE_URL (Render/Heroku) e ajustamos para postgres/postgresql se necessário
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    else:
+        # SQLite como fallback
+        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///instance/groupsesh.db')
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configurações de autenticação
@@ -63,12 +71,36 @@ class ProductionConfig(Config):
         # Configurações adicionais de segurança para produção
 
 
+class RenderConfig(ProductionConfig):
+    """Configuração específica para o ambiente Render."""
+    
+    @staticmethod
+    def init_app(app):
+        ProductionConfig.init_app(app)
+        
+        # Configurar para usar o gunicorn em produção
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app)
+        
+        # Garantir diretório de sessão (para SESSION_TYPE = 'filesystem')
+        import os
+        os.makedirs('flask_session', exist_ok=True)
+
+
 # Configuração para escolher automaticamente com base no ambiente
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
+    'render': RenderConfig,  # Nova configuração para Render
     'default': DevelopmentConfig
 }
 
-config_name = os.environ.get('FLASK_CONFIG', 'default')
+# Detectar automaticamente se estamos no Render
+is_on_render = os.environ.get('RENDER', '') == 'true'
+config_name = os.environ.get('FLASK_CONFIG', 'render' if is_on_render else 'default')
+
+# Garantir que a configuração existe
+if config_name not in config:
+    config_name = 'default'
+
 selected_config = config[config_name]

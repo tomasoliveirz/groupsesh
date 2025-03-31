@@ -5,9 +5,8 @@ db = SQLAlchemy()
 
 def init_app(app):
     """Inicializa a aplicação com a instância do banco de dados."""
-    # Configurar diretório de instância
-    basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    instance_path = os.path.join(basedir, 'instance')
+    # Usar diretório instance dentro da aplicação, não caminhos absolutos
+    instance_path = os.path.join(app.instance_path)
     
     # Garantir que o diretório instance exista
     if not os.path.exists(instance_path):
@@ -19,10 +18,11 @@ def init_app(app):
     if db_uri.startswith('sqlite:///'):
         # Para SQLite, extrair o caminho do arquivo
         db_path = db_uri.replace('sqlite:///', '')
-        # Se o caminho for relativo, convertê-lo para absoluto
+        
+        # Se o caminho não for absoluto, considerar relativo ao instance_path
         if not os.path.isabs(db_path):
-            db_path = os.path.join(basedir, db_path)
-            # Atualizar a configuração com o caminho absoluto
+            db_path = os.path.join(instance_path, os.path.basename(db_path))
+            # Atualizar a configuração com o novo caminho
             app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
         
         # Garantir que o diretório do banco de dados exista
@@ -32,7 +32,8 @@ def init_app(app):
             print(f"Diretório do banco de dados criado em: {db_dir}")
         
         print(f"Caminho do banco de dados SQLite: {db_path}")
-        print(f"URI do banco de dados: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    else:
+        print(f"Usando URI de banco de dados não-SQLite: {db_uri}")
     
     # Inicializar o banco de dados
     db.init_app(app)
