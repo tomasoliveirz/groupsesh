@@ -1,3 +1,8 @@
+"""
+Routes for user authentication (auth_bp).
+Includes login, register, password reset, and OAuth flows.
+"""
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, g
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,35 +14,36 @@ import requests
 import json
 from auth.oauth import google_client, google_enabled, get_google_provider_cfg
 
+# Create auth blueprint
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
+@auth_bp.route('/<lang_code>/auth/register', methods=['GET', 'POST'])
 def register():
     """
-    Rota para registro de novos usuários.
-    - GET: retorna o formulário de registro (HTML).
+    Registration route.
+    - GET: returns the registration form (HTML).
     - POST: 
-        - Se for AJAX (JSON), faz a validação e retorna JSON.
-        - Se for formulário comum, faz a validação e retorna HTML.
+        - If AJAX (JSON), validates and returns JSON.
+        - If regular form, validates and returns HTML.
     """
-    # Se o usuário já estiver logado, não faz sentido registrar de novo
+    # If user is already logged in, no need to register again
     if current_user.is_authenticated:
         return redirect(url_for('index', lang_code=g.lang_code))
     
     if request.method == 'GET':
-        # Retorna a página HTML normal
+        # Return normal HTML page
         return render_template('auth/register.html')
     
-    # Se for POST, vamos verificar se é JSON (chamada AJAX) ou formulário HTML
+    # If POST, check if JSON (AJAX call) or HTML form
     if request.is_json:
-        # --------------------- FLUXO AJAX (JSON) ---------------------
+        # --------------------- AJAX (JSON) FLOW ---------------------
         data = request.get_json() or {}
         name = data.get('name', '').strip()
         email = data.get('email', '').lower().strip()
         password = data.get('password', '')
         confirm_password = data.get('confirm_password', '')
 
-        # Validar campos
+        # Validate fields
         if not name or not email or not password:
             return jsonify({'error': _('Por favor, preencha todos os campos.')}), 400
         
@@ -47,21 +53,21 @@ def register():
         if len(password) < 6:
             return jsonify({'error': _('A senha deve ter pelo menos 6 caracteres.')}), 400
         
-        # Verificar se email já existe
+        # Check if email already exists
         existing_user = User.get_by_email(email)
         if existing_user:
             return jsonify({'error': _('Este email já está registrado.')}), 400
         
-        # Criar usuário
+        # Create user
         new_user = User(name=name, email=email)
         new_user.set_password(password)
         new_user.is_verified = False
-        new_user.generate_verification_token()  # se quiser email de verificação
+        new_user.generate_verification_token()  # for email verification
         
         try:
             db.session.add(new_user)
             db.session.commit()
-            # Envio de email de verificação seria aqui, se necessário
+            # Verification email would be sent here if needed
             
             return jsonify({'message': _('Registro realizado com sucesso! Verifique seu email.')}), 200
         
@@ -71,13 +77,13 @@ def register():
             return jsonify({'error': _('Ocorreu um erro ao criar sua conta. Tente novamente mais tarde.')}), 500
     
     else:
-        # --------------------- FLUXO FORM HTML ---------------------
+        # --------------------- HTML FORM FLOW ---------------------
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').lower().strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         
-        # Validações iguais, mas usando flash + render_template
+        # Same validations, but using flash + render_template
         if not name or not email or not password:
             flash(_('Por favor, preencha todos os campos.'), 'danger')
             return render_template('auth/register.html')
@@ -103,7 +109,7 @@ def register():
             db.session.add(new_user)
             db.session.commit()
             flash(_('Registro realizado com sucesso! Por favor, verifique seu email.'), 'success')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.login', lang_code=g.lang_code))
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Erro ao registrar usuário: {str(e)}", exc_info=True)
@@ -111,65 +117,65 @@ def register():
             return render_template('auth/register.html')
 
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/<lang_code>/auth/login', methods=['GET', 'POST'])
 def login():
     """
-    Rota para login de usuários.
-    Exibe o formulário de login (GET) e faz a validação (POST).
+    Login route.
+    Displays the login form (GET) and validates (POST).
     """
     if current_user.is_authenticated:
         return redirect(url_for('index', lang_code=g.lang_code))
     
     if request.method == 'POST':
-        # Verificar se é uma requisição AJAX ou formulário tradicional
+        # Check if AJAX request or traditional form
         if request.is_json:
-            # ----- FLUXO AJAX -----
+            # ----- AJAX FLOW -----
             data = request.get_json() or {}
             email = data.get('email', '').lower().strip()
             password = data.get('password', '')
             remember = data.get('remember', False)
             
-            # Validação básica
+            # Basic validation
             if not email or not password:
                 return jsonify({'error': _('Por favor, preencha todos os campos.')}), 400
             
             user = User.get_by_email(email)
             
-            # Verificação do usuário e senha
+            # User and password verification
             if not user or not user.check_password(password):
                 return jsonify({'error': _('Email ou senha incorretos.')}), 401
                 
-            # [MODIFICADO] Remover bloqueio por verificação, mas manter aviso
+            # [MODIFIED] Remove verification blocking, but keep warning
             if not user.is_verified:
-                # Apenas registrar aviso sobre verificação pendente
-                current_app.logger.info(f"Login com email não verificado: {email}")
+                # Just log a warning about unverified email
+                current_app.logger.info(f"Login with unverified email: {email}")
                 
-            # Login bem-sucedido
+            # Successful login
             login_user(user, remember=remember)
             
-            # Retornar dados do usuário
+            # Return user data
             return jsonify({
                 'message': _('Login realizado com sucesso.'),
                 'user': user.to_dict(),
-                'verified': user.is_verified  # Informar status de verificação
+                'verified': user.is_verified  # Send verification status
             }), 200
             
         else:
-            # ----- FLUXO FORMULÁRIO HTML -----
+            # ----- HTML FORM FLOW -----
             email = request.form.get('email', '').lower().strip()
             password = request.form.get('password', '')
-            remember = 'remember' in request.form  # checkbox "Lembrar de mim"
+            remember = 'remember' in request.form  # "Remember me" checkbox
             
-            # Validação básica
+            # Basic validation
             if not email or not password:
                 flash(_('Por favor, preencha todos os campos.'), 'danger')
                 return render_template('auth/login.html')
             
             user = User.get_by_email(email)
             
-            # Verificar existência do usuário e a senha
+            # Verify user exists and password is correct
             if user and user.check_password(password):
-                # [MODIFICADO] Remover bloqueio por verificação, mas manter aviso
+                # [MODIFIED] Remove verification blocking, but keep warning
                 if not user.is_verified:
                     flash(_('Sua conta não está verificada. Algumas funcionalidades podem ser limitadas.'), 'warning')
                 
@@ -183,43 +189,45 @@ def login():
                 flash(_('Email ou senha incorretos.'), 'danger')
                 return render_template('auth/login.html')
     
-    # Se for GET, exibe o formulário
+    # If GET, display the form
     return render_template('auth/login.html')
-@auth_bp.route('/logout')
+
+
+@auth_bp.route('/<lang_code>/auth/logout')
 def logout():
-    """Rota para logout de usuários."""
+    """User logout route."""
     logout_user()
     flash(_('Você saiu da sua conta.'), 'info')
     return redirect(url_for('index', lang_code=g.lang_code))
 
 
-@auth_bp.route('/verify/<token>')
+@auth_bp.route('/<lang_code>/auth/verify/<token>')
 def verify_email(token):
-    """Verifica o email do usuário usando o token enviado."""
+    """Verifies the user's email using the sent token."""
     if not token:
         flash(_('Token de verificação inválido.'), 'danger')
         return redirect(url_for('index', lang_code=g.lang_code))
     
-    # Buscar usuário pelo token de verificação
+    # Find user by verification token
     user = User.query.filter_by(verification_token=token).first()
     
     if not user:
         flash(_('Token de verificação inválido ou expirado.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
-    # Verificar se o token ainda é válido (não expirou)
+    # Check if token is still valid (not expired)
     if user.verify_account(token):
         db.session.commit()
         flash(_('Sua conta foi verificada com sucesso! Agora você pode fazer login.'), 'success')
     else:
         flash(_('Token de verificação expirado. Solicite um novo.'), 'warning')
     
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth.login', lang_code=g.lang_code))
 
 
-@auth_bp.route('/reset-password', methods=['GET', 'POST'])
+@auth_bp.route('/<lang_code>/auth/reset-password', methods=['GET', 'POST'])
 def reset_password_request():
-    """Solicita redefinição de senha."""
+    """Password reset request."""
     if current_user.is_authenticated:
         return redirect(url_for('index', lang_code=g.lang_code))
     
@@ -236,32 +244,32 @@ def reset_password_request():
             token = user.generate_reset_token()
             db.session.commit()
             
-            # TODO: Enviar email com o link para redefinir senha
+            # TODO: Send email with reset link
             # send_password_reset_email(user, token)
             
-            # Log para debug (remover em produção)
-            reset_url = url_for('auth.reset_password', token=token, _external=True)
+            # Debug log (remove in production)
+            reset_url = url_for('auth.reset_password', token=token, lang_code=g.lang_code, _external=True)
             current_app.logger.info(f"Reset URL for {email}: {reset_url}")
         
-        # Sempre mostrar a mesma mensagem (segurança)
+        # Always show the same message (security)
         flash(_('Se o email existir no sistema, você receberá instruções para redefinir sua senha.'), 'info')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
     return render_template('auth/reset_password_request.html')
 
 
-@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+@auth_bp.route('/<lang_code>/auth/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    """Redefine a senha usando o token."""
+    """Reset password using token."""
     if current_user.is_authenticated:
         return redirect(url_for('index', lang_code=g.lang_code))
     
-    # Buscar usuário pelo token
+    # Find user by reset token
     user = User.query.filter_by(reset_password_token=token).first()
     
     if not user:
         flash(_('Link de redefinição de senha inválido ou expirado.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
     if request.method == 'POST':
         password = request.form.get('password', '')
@@ -275,84 +283,84 @@ def reset_password(token):
             flash(_('A senha deve ter pelo menos 6 caracteres.'), 'danger')
             return render_template('auth/reset_password.html', token=token)
         
-        # Tentar redefinir a senha
+        # Try to reset password
         if user.reset_password(token, password):
             db.session.commit()
             flash(_('Sua senha foi redefinida com sucesso. Agora você pode fazer login.'), 'success')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.login', lang_code=g.lang_code))
         else:
             flash(_('Link de redefinição de senha expirado.'), 'danger')
-            return redirect(url_for('auth.reset_password_request'))
+            return redirect(url_for('auth.reset_password_request', lang_code=g.lang_code))
     
     return render_template('auth/reset_password.html', token=token)
 
 
-@auth_bp.route('/google-login')
+@auth_bp.route('/<lang_code>/auth/google-login')
 def google_login():
-    """Inicia o fluxo de login com Google OAuth."""
-    # Verificar se o Google OAuth está configurado
+    """Initiates Google OAuth flow."""
+    # Check if Google OAuth is configured
     if not google_enabled:
         flash(_('Login com Google não está disponível no momento.'), 'warning')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
-    # Obter informações do provedor Google
+    # Get Google provider information
     google_provider_cfg = get_google_provider_cfg()
     if not google_provider_cfg:
         flash(_('Erro ao conectar com Google. Por favor, tente novamente.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
-    # Construir URL de autorização
+    # Build authorization URL
     try:
         authorization_endpoint = google_provider_cfg["authorization_endpoint"]
         
-        # URL de callback (onde o usuário será redirecionado após autenticação)
-        redirect_uri = url_for('auth.google_callback', _external=True)
+        # Callback URL (where user will be redirected after authentication)
+        redirect_uri = url_for('auth.google_callback', lang_code=g.lang_code, _external=True)
         
-        # Preparar URL de solicitação com escopos necessários
+        # Prepare request URL with necessary scopes
         request_uri = google_client.prepare_request_uri(
             authorization_endpoint,
             redirect_uri=redirect_uri,
             scope=["openid", "email", "profile"],
         )
         
-        # Redirecionar para a página de autenticação do Google
+        # Redirect to Google authentication page
         return redirect(request_uri)
     except Exception as e:
         current_app.logger.error(f"Erro no login com Google: {str(e)}", exc_info=True)
         flash(_('Falha ao iniciar autenticação com Google.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
 
 
-@auth_bp.route('/google-callback')
+@auth_bp.route('/<lang_code>/auth/google-callback')
 def google_callback():
-    """Processa o retorno da autenticação do Google."""
-    # Verificar se o Google OAuth está configurado
+    """Handles Google authentication callback."""
+    # Check if Google OAuth is configured
     if not google_enabled:
         flash(_('Login com Google não está disponível no momento.'), 'warning')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
-    # Verificar se recebemos um código de autorização
+    # Check if we received an authorization code
     code = request.args.get("code")
     if not code:
         flash(_('Falha na autenticação com Google.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
     try:
-        # Obter configuração do provedor
+        # Get provider configuration
         google_provider_cfg = get_google_provider_cfg()
         if not google_provider_cfg:
             raise Exception("Não foi possível obter configuração do Google")
         
-        # Trocar código de autorização por token de acesso
+        # Exchange authorization code for access token
         token_endpoint = google_provider_cfg["token_endpoint"]
         token_url, headers, body = google_client.prepare_token_request(
             token_endpoint,
             authorization_response=request.url,
-            redirect_url=url_for('auth.google_callback', _external=True),
+            redirect_url=url_for('auth.google_callback', lang_code=g.lang_code, _external=True),
             code=code
         )
         
-        # Fazer requisição para obter token
+        # Make request to get token
         token_response = requests.post(
             token_url,
             headers=headers,
@@ -360,101 +368,101 @@ def google_callback():
             auth=(current_app.config["GOOGLE_CLIENT_ID"], current_app.config["GOOGLE_CLIENT_SECRET"]),
         )
         
-        # Analisar resposta do token
+        # Parse token response
         google_client.parse_request_body_response(json.dumps(token_response.json()))
         
-        # Obter informações do usuário
+        # Get user information
         userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
         uri, headers, body = google_client.add_token(userinfo_endpoint)
         userinfo_response = requests.get(uri, headers=headers, data=body)
         
-        # Verificar se o email foi validado pelo Google
+        # Verify email was validated by Google
         if userinfo_response.json().get("email_verified"):
-            # Obter dados do usuário
+            # Get user data
             google_id = userinfo_response.json()["sub"]
             email = userinfo_response.json()["email"]
             name = userinfo_response.json().get("name", email.split('@')[0])
             picture = userinfo_response.json().get("picture")
         else:
             flash(_('Email não verificado pelo Google.'), 'danger')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.login', lang_code=g.lang_code))
         
-        # Verificar se usuário já existe pelo Google ID
+        # Check if user already exists by Google ID
         user = User.get_by_google_id(google_id)
         
         if not user:
-            # Verificar se existe usuário com o mesmo email
+            # Check if user exists with the same email
             user = User.get_by_email(email)
             
             if user:
-                # Associar Google ID ao usuário existente
+                # Associate Google ID with existing user
                 user.google_id = google_id
                 user.profile_picture = picture
             else:
-                # Criar novo usuário
+                # Create new user
                 user = User(
                     email=email,
                     name=name,
                     google_id=google_id,
                     profile_picture=picture,
-                    is_verified=True  # Usuários do Google já são verificados
+                    is_verified=True  # Google users are already verified
                 )
             
-            # Salvar alterações
+            # Save changes
             db.session.add(user)
             db.session.commit()
         
-        # Fazer login do usuário
+        # Log user in
         login_user(user, remember=True)
         
-        # Redirecionar para página principal
+        # Redirect to home page
         return redirect(url_for('index', lang_code=g.lang_code))
     
     except Exception as e:
         current_app.logger.error(f"Erro no callback do Google: {str(e)}", exc_info=True)
         flash(_('Erro durante autenticação com Google.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
 
 
-@auth_bp.route('/resend-verification', methods=['POST'])
+@auth_bp.route('/<lang_code>/auth/resend-verification', methods=['POST'])
 def resend_verification():
-    """Reenvia o email de verificação."""
+    """Resends verification email."""
     email = request.form.get('email') or request.json.get('email')
     
     if not email:
         if request.is_json:
             return jsonify({'error': _('Email não fornecido.')}), 400
         flash(_('Por favor, informe seu email.'), 'danger')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
     user = User.get_by_email(email)
     
     if not user:
-        # Segurança: não revelar se o email existe
+        # Security: don't reveal if email exists
         if request.is_json:
             return jsonify({'message': _('Se o email existir, um novo link de verificação foi enviado.')}), 200
         flash(_('Se o email existir, um novo link de verificação foi enviado.'), 'info')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
     if user.is_verified:
         if request.is_json:
             return jsonify({'error': _('Sua conta já está verificada.')}), 400
         flash(_('Sua conta já está verificada.'), 'info')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', lang_code=g.lang_code))
     
-    # Gerar novo token
+    # Generate new token
     token = user.generate_verification_token()
     db.session.commit()
     
-    # TODO: Enviar email com o link de verificação
+    # TODO: Send email with verification link
     # send_verification_email(user, token)
     
-    # Log para debug (remover em produção)
-    verification_url = url_for('auth.verify_email', token=token, _external=True)
+    # Debug log (remove in production)
+    verification_url = url_for('auth.verify_email', token=token, lang_code=g.lang_code, _external=True)
     current_app.logger.info(f"Verification URL for {email}: {verification_url}")
     
     if request.is_json:
         return jsonify({'message': _('Um novo link de verificação foi enviado para seu email.')}), 200
     
     flash(_('Um novo link de verificação foi enviado para seu email.'), 'info')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth.login', lang_code=g.lang_code))

@@ -34,6 +34,187 @@ const GS = {
     }
 };
 
+// Global application object
+const GroupSeshApp = {
+    // Application state
+    state: {
+        currentLanguage: null,
+        isLoading: false
+    },
+    
+    /**
+     * Initialize the application
+     */
+    init() {
+        console.log('[Main] Initializing application');
+        
+        // Initialize components
+        ThemeManager.init();
+        this.initUserInterface();
+        
+        // Get current language from URL
+        this.state.currentLanguage = LanguageManager.getCurrentLanguage();
+        
+        // Initialize language manager
+        LanguageManager.init();
+        LanguageManager.updateLinksLanguage();
+        
+        // Application is ready
+        console.log('[Main] Application initialized');
+        document.dispatchEvent(new CustomEvent('appReady'));
+    },
+    
+    /**
+     * Initialize user interface components
+     */
+    initUserInterface() {
+        // Initialize Bootstrap components if available
+        if (typeof bootstrap !== 'undefined') {
+            // Initialize tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            if (tooltipTriggerList.length > 0) {
+                [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+            }
+            
+            // Initialize popovers
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            if (popoverTriggerList.length > 0) {
+                [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+            }
+        }
+        
+        // Add input handlers to clear validation errors
+        document.querySelectorAll('input, textarea, select').forEach(field => {
+            field.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                
+                // Hide error feedback if it exists
+                const feedback = this.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.style.display = 'none';
+                }
+            });
+        });
+        
+        // Adicionar handlers para links com rolagem suave
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('href');
+                
+                // Ignorar se o targetId for apenas "#"
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    e.preventDefault();
+                    
+                    // Rolagem suave
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80, // Ajuste para o header fixo
+                        behavior: 'smooth'
+                    });
+                    
+                    // Atualizar URL sem recarregar a página
+                    history.pushState(null, null, targetId);
+                }
+            });
+        });
+    },
+    
+    /**
+     * Handle API requests with proper error handling
+     * @param {string} url - API endpoint URL
+     * @param {Object} options - Fetch options
+     * @returns {Promise} - Promise resolving to response data
+     */
+    async fetchAPI(url, options = {}) {
+        try {
+            // Show loading state if needed
+            if (options.showLoading !== false) {
+                this.state.isLoading = true;
+                // Add visual loading indicator if needed
+            }
+            
+            // Set up headers
+            const headers = {
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(options.headers || {})
+            };
+            
+            // Default to JSON content type unless explicitly set otherwise
+            if (!headers['Content-Type'] && !options.formData) {
+                headers['Content-Type'] = 'application/json';
+                headers['Accept'] = 'application/json';
+            }
+            
+            // Prepare fetch options
+            const fetchOptions = {
+                ...options,
+                headers
+            };
+            
+            // Execute fetch request
+            const response = await fetch(url, fetchOptions);
+            
+            // Handle unsuccessful responses
+            if (!response.ok) {
+                const errorData = await this.parseResponse(response);
+                throw new Error(
+                    typeof errorData === 'object' && errorData.error
+                        ? errorData.error
+                        : `API request failed with status ${response.status}`
+                );
+            }
+            
+            // Parse successful response
+            return await this.parseResponse(response);
+        } catch (error) {
+            console.error('API request error:', error);
+            throw error;
+        } finally {
+            // Reset loading state
+            this.state.isLoading = false;
+        }
+    },
+
+    /**
+     * Safely parse response based on content type
+     * @param {Response} response - Fetch Response object
+     * @returns {Promise<Object|string>} - Parsed response
+     */
+    async parseResponse(response) {
+        try {
+            // Check content type header
+            const contentType = response.headers.get('content-type') || '';
+            
+            // Parse as JSON if indicated by content type
+            if (contentType.includes('application/json')) {
+                return await response.json();
+            }
+            
+            // For non-JSON responses, return as text
+            const text = await response.text();
+            
+            // Try to parse as JSON anyway in case content-type is wrong
+            // but only if it starts with a JSON character
+            if ((text.trim().startsWith('{') || text.trim().startsWith('[')) && !text.includes('<!DOCTYPE')) {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    // If it fails, just return the text
+                    return text;
+                }
+            }
+            
+            return text;
+        } catch (error) {
+            console.error('Error parsing response:', error);
+            return response.text(); // Fallback to text if parsing fails
+        }
+    }
+};
+
 /**
  * Manipulador central para detecção de tema e preferências do usuário
  */
@@ -108,29 +289,104 @@ const ThemeManager = {
 };
 
 /**
- * Utilitário para manipular o idioma da aplicação
+ * Utility for managing application language
  */
 const LanguageManager = {
     /**
-     * Inicializa o gerenciador de idiomas
+     * Initialize the language manager
      */
     init() {
+        console.log('[LanguageManager] Initializing language manager');
         const langSelector = document.querySelector('.language-selector');
-        if (!langSelector) return;
+        if (!langSelector) {
+            console.log('[LanguageManager] No language selector found');
+            return;
+        }
         
-        // Encontrar todos os links de idioma
+        // Find all language links
         const langLinks = document.querySelectorAll('.dropdown-menu .dropdown-item');
         
-        // Adicionar handler para cada link de idioma
+        // Add handler for each language link
         langLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                if (link.classList.contains('active')) {
-                    e.preventDefault();
-                    return;
-                }
-                
-                // O link já contém o href correto definido pelo backend
-            });
+            // Remove any existing click listeners to avoid duplicates
+            link.removeEventListener('click', this.handleLanguageClick);
+            
+            // Add our handler
+            link.addEventListener('click', this.handleLanguageClick);
+        });
+        
+        console.log('[LanguageManager] Language links initialized:', langLinks.length);
+    },
+    
+    /**
+     * Handle language link clicks
+     * @param {Event} e - The click event
+     */
+    handleLanguageClick(e) {
+        // If the language is already active, don't do anything
+        if (this.classList.contains('active')) {
+            console.log('[LanguageManager] Active language clicked, preventing action');
+            e.preventDefault();
+            return;
+        }
+        
+        console.log('[LanguageManager] Language change requested to:', this.href);
+        
+        // Add loading class to body to show loading state
+        document.body.classList.add('language-switching');
+        
+        // Let the browser handle the navigation normally
+        // Do not prevent default - we want a full page reload for language changes
+    },
+    
+    /**
+     * Gets the current language code from the URL or HTML
+     * @returns {string} Current language code
+     */
+    getCurrentLanguage() {
+        // Try to get language from URL path
+        const pathMatch = window.location.pathname.match(/^\/([a-z]{2}(?:-[a-z]{2})?)\//);
+        if (pathMatch && pathMatch[1]) {
+            return pathMatch[1];
+        }
+        
+        // Try to get from HTML attribute
+        const htmlLang = document.documentElement.lang;
+        if (htmlLang) return htmlLang;
+        
+        // Try to get from active language selector
+        const activeLink = document.querySelector('.dropdown-menu .dropdown-item.active');
+        if (activeLink) {
+            const href = activeLink.getAttribute('href');
+            const match = href.match(/\/([a-z]{2}(?:-[a-z]{2})?)\//);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        
+        // Default to English if we can't determine
+        return 'en';
+    },
+    
+    /**
+     * Updates links in the page to include the current language code
+     * This is helpful for dynamically generated content
+     */
+    updateLinksLanguage() {
+        const currentLang = this.getCurrentLanguage();
+        console.log('[LanguageManager] Updating dynamic links with language:', currentLang);
+        
+        // Find links without language code
+        document.querySelectorAll('a[href^="/"]').forEach(link => {
+            const href = link.getAttribute('href');
+            
+            // Skip links that already have a language code
+            if (href.match(/^\/[a-z]{2}(?:-[a-z]{2})?\//)) {
+                return;
+            }
+            
+            // Add language code to links that don't have one
+            link.setAttribute('href', `/${currentLang}${href}`);
         });
     }
 };
@@ -329,55 +585,24 @@ const DateUtils = {
     }
 };
 
-/**
- * Inicialização global
- */
+// Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar gerenciadores
-    ThemeManager.init();
-    LanguageManager.init();
+    // Initialize the main application
+    GroupSeshApp.init();
     
-    // Inicializar tooltips do Bootstrap (se existirem)
-    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
-    }
-    
-    // Adicionar handlers para links com rolagem suave
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href');
-            
-            // Ignorar se o targetId for apenas "#"
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                e.preventDefault();
-                
-                // Rolagem suave
-                window.scrollTo({
-                    top: targetElement.offsetTop - 80, // Ajuste para o header fixo
-                    behavior: 'smooth'
-                });
-                
-                // Atualizar URL sem recarregar a página
-                history.pushState(null, null, targetId);
-            }
-        });
-    });
-    
-    // Remover classes .is-invalid ao digitar em campos de formulário
-    document.querySelectorAll('input, textarea, select').forEach(field => {
-        field.addEventListener('input', function() {
-            this.classList.remove('is-invalid');
-            
-            // Remover feedback de erro associado (se existir)
-            const feedback = this.nextElementSibling;
-            if (feedback && feedback.classList.contains('invalid-feedback')) {
-                feedback.style.display = 'none';
-            }
-        });
+    // Listen for page content updates (for AJAX loaded content)
+    document.addEventListener('pageContentUpdated', function(e) {
+        console.log('[Main] Page content updated', e.detail?.pageType || '');
+        
+        // Reinitialize language manager for new content
+        LanguageManager.init();
+        LanguageManager.updateLinksLanguage();
     });
 });
+
+// Make utilities globally available
+window.GroupSeshApp = GroupSeshApp;
+window.ThemeManager = ThemeManager;
+window.LanguageManager = LanguageManager;
+window.FormUtils = FormUtils;
+window.DateUtils = DateUtils;

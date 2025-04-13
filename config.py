@@ -2,41 +2,41 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente de .env se existir
+# Load environment variables from .env if it exists
 load_dotenv()
 
 class Config:
-    # Configurações básicas
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'sua-chave-secreta-aqui')
+    # Basic configuration
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
     DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
     
-    # Configurações do banco de dados
-    # Primeiro checamos por DATABASE_URL (Render/Heroku) e ajustamos para postgres/postgresql se necessário
+    # Database configurations
+    # First check for DATABASE_URL (Render/Heroku) and adjust for postgres/postgresql if needed
     DATABASE_URL = os.environ.get('DATABASE_URL')
     if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
         SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
-        # SQLite como fallback
+        # SQLite as fallback
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///instance/availability_survey.db')
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Configurações de autenticação
+    # Authentication configurations
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     PERMANENT_SESSION_LIFETIME = timedelta(days=30)
     SESSION_TYPE = 'filesystem'
     
-    # OAuth para Google
+    # OAuth for Google
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
     
-    # Configurações de segurança
+    # Security configurations
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1', 't')
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Configurações do sistema de emails
+    # Email system configurations
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.example.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
@@ -45,55 +45,55 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@groupsesh.com')
     
-    # Configurações específicas do GroupSesh
-    SURVEY_LINK_EXPIRY = int(os.environ.get('SURVEY_LINK_EXPIRY', 30))  # Dias
+    # GroupSesh specific configurations
+    SURVEY_LINK_EXPIRY = int(os.environ.get('SURVEY_LINK_EXPIRY', 30))  # Days
     
-    # Configurações de internacionalização
-    BABEL_DEFAULT_LOCALE = 'pt'
+    # Internationalization configurations
+    BABEL_DEFAULT_LOCALE = 'en'  # Changed to English
     BABEL_DEFAULT_TIMEZONE = 'UTC'
     
     @staticmethod
     def init_app(app):
-        """Inicialização adicional para o aplicativo Flask."""
+        """Additional initialization for the Flask application."""
         pass
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    # Outras configurações específicas para desenvolvimento
+    # Other development-specific configurations
 
 
 class ProductionConfig(Config):
     DEBUG = False
     
-    # Configurações de segurança para produção
+    # Security configurations for production
     SESSION_COOKIE_SECURE = True
     
     @staticmethod
     def init_app(app):
         Config.init_app(app)
-        # Configurações adicionais de segurança para produção
+        # Additional security configurations for production
 
 
 class RenderConfig(ProductionConfig):
-    """Configuração específica para o ambiente Render."""
+    """Render-specific configuration."""
     
     @staticmethod
     def init_app(app):
         ProductionConfig.init_app(app)
         
-        # Configurar para usar o gunicorn em produção
+        # Configure to use gunicorn in production
         from werkzeug.middleware.proxy_fix import ProxyFix
         app.wsgi_app = ProxyFix(
             app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
         )
         
-        # Garantir diretório de sessão (para SESSION_TYPE = 'filesystem')
+        # Ensure session directory (for SESSION_TYPE = 'filesystem')
         import os
         os.makedirs('flask_session', exist_ok=True)
 
 
-# Configuração para escolher automaticamente com base no ambiente
+# Configuration to automatically choose based on environment
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
@@ -101,11 +101,11 @@ config = {
     'default': DevelopmentConfig
 }
 
-# Detectar automaticamente se estamos no Render
+# Automatically detect if we're on Render
 is_on_render = os.environ.get('RENDER', '') == 'true'
 config_name = os.environ.get('FLASK_CONFIG', 'render' if is_on_render else 'default')
 
-# Garantir que a configuração existe
+# Ensure configuration exists
 if config_name not in config:
     config_name = 'default'
 

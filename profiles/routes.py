@@ -61,16 +61,22 @@ def profile():
 @profile_bp.route('/<lang_code>/my-surveys')
 @login_required
 def my_surveys():
-    """
-    Página de "Minhas Pesquisas".
-    Exibe as pesquisas criadas pelo usuário e as que ele participou.
-    """
-    # Surveys criadas
-    created_surveys = Survey.query.filter_by(creator_id=current_user.id).all()
+    """Página que mostra surveys criadas e participadas pelo usuário."""
+    # Buscar surveys criadas pelo usuário atual
+    created_surveys = Survey.query.filter_by(creator_id=current_user.id).order_by(Survey.created_at.desc()).all()
     
-    # Surveys que participou
-    participations = Participant.query.filter_by(user_id=current_user.id).all()
-    participated_surveys = [p.survey for p in participations if p.survey not in created_surveys]
+    # Buscar IDs das surveys criadas pelo usuário para exclusão
+    created_survey_ids = [survey.id for survey in created_surveys]
+    
+
+    
+    # Buscar surveys em que o usuário atual é participante, EXCLUINDO as que ele criou
+    participated_surveys = Survey.query.join(
+        Participant, Survey.id == Participant.survey_id
+    ).filter(
+        Participant.user_id == current_user.id,
+        ~Survey.id.in_(created_survey_ids) if created_survey_ids else True
+    ).order_by(Survey.created_at.desc()).all()
     
     return render_template(
         'my_surveys.html',

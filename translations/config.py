@@ -53,12 +53,35 @@ LANGUAGES = {
     },
 }
 
-# Default language (changed to English)
+# Default language
 DEFAULT_LANGUAGE = 'en'
 
 # Aliases to simplify importing
 _ = gettext
 _l = lazy_gettext
+
+# Mapping between URL language codes and Babel locales
+# This is a critical mapping to ensure proper language loading
+URL_TO_BABEL_LOCALE = {
+    'en': 'en',
+    'pt-pt': 'pt_PT',
+    'pt-br': 'pt_BR',
+    'es': 'es',
+    'de': 'de',
+    'fr': 'fr',
+    'it': 'it'
+}
+
+# Reverse mapping from Babel locale to URL language code
+BABEL_LOCALE_TO_URL = {
+    'en': 'en',
+    'pt_PT': 'pt-pt',
+    'pt_BR': 'pt-br',
+    'es': 'es',
+    'de': 'de',
+    'fr': 'fr',
+    'it': 'it'
+}
 
 
 def get_locale():
@@ -74,25 +97,35 @@ def get_locale():
     # Check if language is defined in URL 
     if hasattr(g, 'lang_code') and g.lang_code in LANGUAGES:
         session['language'] = g.lang_code
-        return LANGUAGES[g.lang_code]['babel_locale']
+        # Get the corresponding Babel locale code
+        babel_locale = URL_TO_BABEL_LOCALE.get(g.lang_code, DEFAULT_LANGUAGE)
+        return babel_locale
     
     # Check if language is in session
     if 'language' in session and session['language'] in LANGUAGES:
-        return LANGUAGES[session['language']]['babel_locale']
+        # Get the corresponding Babel locale code
+        babel_locale = URL_TO_BABEL_LOCALE.get(session['language'], DEFAULT_LANGUAGE)
+        return babel_locale
     
     # Check browser's Accept-Languages
-    preferred = request.accept_languages.best_match(
-        [lang['babel_locale'] for lang in LANGUAGES.values()]
-    ) if request and hasattr(request, 'accept_languages') else None
+    supported_locales = [lang for lang in URL_TO_BABEL_LOCALE.values()]
+    preferred = request.accept_languages.best_match(supported_locales)
     
-    # Map Babel locale back to our language code
+    # Return preferred locale or default
     if preferred:
-        for code, lang in LANGUAGES.items():
-            if lang['babel_locale'] == preferred:
-                return lang['babel_locale']
+        return preferred
     
     # Use default language
-    return LANGUAGES[DEFAULT_LANGUAGE]['babel_locale']
+    return URL_TO_BABEL_LOCALE[DEFAULT_LANGUAGE]
+
+
+def get_locale_with_logging():
+    """
+    Wrapper for get_locale() that adds debug logging.
+    """
+    locale = get_locale()
+    print(f"DEBUG - Using locale: {locale}, current URL: {request.path}")
+    return locale
 
 
 def init_babel(app):
@@ -105,13 +138,20 @@ def init_babel(app):
     Returns:
         Babel: Configured Babel instance
     """
-    babel = Babel(app, locale_selector=get_locale)
+    # Configure babel with the appropriate locale selector function
+    # Use the logging version in debug mode, otherwise use the regular version
+    locale_selector = get_locale_with_logging if app.debug else get_locale
+    babel = Babel(app, locale_selector=locale_selector)
     
     # Add supported languages to template context
     @app.context_processor
     def inject_languages():
         current_lang = get_current_language_code()
-        return {'languages': LANGUAGES, 'language_code': current_lang}
+        return {
+            'languages': LANGUAGES, 
+            'language_code': current_lang,
+            'DEFAULT_LANGUAGE': DEFAULT_LANGUAGE
+        }
     
     return babel
 
@@ -131,14 +171,9 @@ def get_current_language_code():
     if 'language' in session and session['language'] in LANGUAGES:
         return session['language']
     
-    # Try to get from browser preferences
-    preferred = request.accept_languages.best_match(
-        [lang['babel_locale'] for lang in LANGUAGES.values()]
-    ) if request and hasattr(request, 'accept_languages') else None
-    
-    if preferred:
-        for code, lang in LANGUAGES.items():
-            if lang['babel_locale'] == preferred:
-                return code
+    # If we have a locale from Babel, convert it to our URL format
+    locale = get_locale()
+    if locale in BABEL_LOCALE_TO_URL:
+        return BABEL_LOCALE_TO_URL[locale]
     
     return DEFAULT_LANGUAGE
